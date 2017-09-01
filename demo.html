@@ -129,7 +129,7 @@ function drawMemoryLayoutDiagram(blocks) {
         container.append(endLabel);
 
         let eventNames = ['mouseover', 'mouseout'];
-        if (PointerEvent in window) {
+        if (!!(window.PointerEvent)) {
             eventNames = ['pointerenter', 'pointerout'];
         }
         block.addEventListener(eventNames[0], ()=>{
