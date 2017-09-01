@@ -3,6 +3,11 @@
 
 Yet another parser for "Intel HEX" files.
 
+## Demo
+
+If you have some .hex files around, and can copy-paste them around, try the
+[interactive browser demo](demo.html).
+
 ## Usage
 
 Do a `npm install nordicsemi-intel-hex` or `yarn add nordicsemi-intel-hex`, then
