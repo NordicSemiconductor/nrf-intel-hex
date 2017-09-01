@@ -31,6 +31,21 @@ For contiguous data, that `Map` will have only one entry. For sparse data, it wi
 several entries, indexed by the start offset of each data block. Its keys are guaranteed
 to be in ascending order.
 
+In order to write .hex records, provide a `Map` of `Uint8Array`s, where each key is the
+start address of that block:
+
+```
+import { arraysToHex } from 'nordicsemi-intel-hex';
+
+let blocks = new Map();
+let bytes = new Uint8Array(....);
+blocks.set(0x0FF80000, bytes); // The block with 'bytes' will start at offset 0x0FF80000
+
+let string = arraysToHex(blocks);
+```
+
+The return value will be a string of text containing all the records.
+
 ## Motivation
 
 There are already other parsers/writers for HEX files (or, as the format is
