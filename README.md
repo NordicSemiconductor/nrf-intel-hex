@@ -6,7 +6,7 @@ Yet another parser for "Intel HEX" files.
 ## Demo
 
 If you have some .hex files around, and can copy-paste them around, try the
-[interactive browser demo](demo.html).
+[interactive browser demo](https://nordicsemiconductor.github.io/nrf-intel-hex/demo.html).
 
 ## Usage
 
