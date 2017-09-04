@@ -1,13 +1,21 @@
 {
   "name": "nrf-intel-hex",
   "version": "0.1.0",
+  "license": "BSD",
   "description": "Parser/writer for the Intel HEX format",
   "main": "intel-hex.js",
   "author": "Iván Sánchez Ortega <ivan@sanchezortega.es>",
-    "scripts": {
-        "test": "jasmine"
-    },  "devDependencies": {
+  "scripts": {
+    "test": "jasmine"
+  },
+  "devDependencies": {
     "jasmine": "^2.8.0"
   },
-  "keywords": ["intel", "hex", "ihex", "parser"]
+  "keywords": [
+    "intel",
+    "hex",
+    "ihex",
+    "parser"
+  ],
+  "repository": "https://github.com/NordicSemiconductor/nrf-intel-hex.git"
 }

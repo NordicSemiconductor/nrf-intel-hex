@@ -1,11 +1,16 @@
 
 # nrf-intel-hex
 
-Yet another parser for "Intel HEX" files.
+Yet another parser/writer for "[Intel HEX](https://en.wikipedia.org/wiki/Intel_HEX)" files.
+
+This is part of [Nordic Semiconductor](http://www.nordicsemi.com/)'s javascript tools to
+interface with nRF SoCs and development kits. Although the HEX format is a *de facto*
+standard and `nrf-intel-hex` should work on other hardware platforms, Nordic Semiconductor
+cannot offer support. This software is provided "as is".
 
 ## Demo
 
-If you have some .hex files around, and can copy-paste them around, try the
+If you have some .hex files around, and can copy-paste them, try the
 [interactive browser demo](https://nordicsemiconductor.github.io/nrf-intel-hex/demo.html).
 
 ## Usage
@@ -122,7 +127,10 @@ The behaviour for writing .hex format is stricter and predictable, in line with 
 
 Both the parser and the writer work in a node.js environment, and in any modern web browser.
 
-### Features which should be nice to have in the future
+### TODO
+
+Some features that would be nice to have, but that are not needed for the current
+use cases yet:
 
 * Stream mode: allow to start parsing a byte stream (e.g. file or network socket), and
   emit data blocks of a given size when appropiate (e.g. when more than N contiguous byes have been parsed, or when jumping to a different memory address section). This is not a
@@ -138,4 +146,9 @@ Both the parser and the writer work in a node.js environment, and in any modern 
 * https://en.wikipedia.org/wiki/Intel_HEX
 * http://microsym.com/editor/assets/intelhex.pdf
 * http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka9903.html
+
+## Legal
+
+Distrubuted under a BSD-3 license. See the `LICENSE` file for details.
+
 
