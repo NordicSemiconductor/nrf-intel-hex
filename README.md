@@ -3,6 +3,8 @@
 
 Yet another parser/writer for "[Intel HEX](https://en.wikipedia.org/wiki/Intel_HEX)" files.
 
+[![Build Status](https://travis-ci.org/NordicSemiconductor/nrf-intel-hex.svg?branch=master)](https://travis-ci.org/NordicSemiconductor/nrf-intel-hex)
+
 This is part of [Nordic Semiconductor](http://www.nordicsemi.com/)'s javascript tools to
 interface with nRF SoCs and development kits. Although the HEX format is a *de facto*
 standard and `nrf-intel-hex` should work on other hardware platforms, Nordic Semiconductor
