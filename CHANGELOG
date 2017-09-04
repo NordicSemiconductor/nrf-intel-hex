@@ -1,0 +1,6 @@
+
+# v0.1.0 (2017-09-04)
+
+* Initial release
+* Support for hex files with sparse (non-contiguous) contents
+* 60 or so jasmine-powered unit tests

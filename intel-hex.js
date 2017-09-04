@@ -199,7 +199,7 @@ function hexToArrays(hexText, maxBlockSize = Infinity, strict = true) {
                     // where it should reset the program counter (EIP CPU register)
                     // It might have meaning for other CPU architectures
                     // (see http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka9903.html )
-                    // bit will be ignored nonetheless.
+                    // but will be ignored nonetheless.
                     break;
             }
         }
@@ -328,12 +328,10 @@ function arraysToHex(blocks, lineSize = 16) {
                     lineSize,                            // Normal case
                     blockEnd - highAddress - lowAddress, // End of block
                     0x10000 - lowAddress,                // End of low addresses
-                    255                                  // Maximum record legnth as per spec
+                    255                                  // Maximum record length as per spec
                 );
 
                 if (recordSize) {
-
-//     console.log('high 0x'+ hexpad(highAddress), 'low 0x'+ hexpad(lowAddress), 'size ' + recordSize);
 
                     recordHeader[0] = recordSize;   // Length
                     recordHeader[1] = lowAddress >> 8;    // Load offset, high byte
