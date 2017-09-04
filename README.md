@@ -17,7 +17,7 @@ If you have some .hex files around, and can copy-paste them, try the
 
 ## Usage
 
-Do a `npm install nordicsemi-intel-hex` or `yarn add nordicsemi-intel-hex`, then
+Do a `npm install nrf-intel-hex` or `yarn add nrf-intel-hex`, then
 
 ```
 import { hexToArrays } from 'nordicsemi-intel-hex';
