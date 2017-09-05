@@ -20,7 +20,7 @@ If you have some .hex files around, and can copy-paste them, try the
 Do a `npm install nrf-intel-hex` or `yarn add nrf-intel-hex`, then
 
 ```
-import { hexToArrays } from 'nordicsemi-intel-hex';
+import { hexToArrays } from 'nrf-intel-hex';
 
 let intelHexString =
     ":100000000102030405060708090A0B0C0D0E0F1068\n" +
@@ -42,7 +42,7 @@ In order to write .hex records, provide a `Map` of `Uint8Array`s, where each key
 start address of that block:
 
 ```
-import { arraysToHex } from 'nordicsemi-intel-hex';
+import { arraysToHex } from 'nrf-intel-hex';
 
 let blocks = new Map();
 let bytes = new Uint8Array(....);
