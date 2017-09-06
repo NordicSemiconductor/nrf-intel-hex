@@ -1,8 +1,10 @@
 
-// Parser / writer for the "Intel hex" format
-// Format specifications at:
-// https://en.wikipedia.org/wiki/Intel_HEX
-// http://microsym.com/editor/assets/intelhex.pdf
+
+/**
+ * Parser/writer for the "Intel hex" format.
+ *
+ * @module nrf-intel-hex
+ */
 
 /*
  * A regexp that matches lines in a .hex file.
@@ -85,13 +87,44 @@ function mergeBlocks(blocks, maxBlockSize = Infinity) {
 }
 
 
-// Takes a string as input,
-// Returns an Map of address→Uint8Arrays.
-// The insertion order of the returned map is guaranteed to
-// be ascending
-// Concatenates the blocks if possible, up to maxBlockSize
-// If maxBlockSize is given, then the maximum size of each Uint8Array will be that.
-function hexToArrays(hexText, maxBlockSize = Infinity, strict = true) {
+/**
+ * Parses a string containing data formatted in "Intel HEX" format, and
+ * returns a {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map|<tt>Map</tt>}
+ * of {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array|<tt>Uint8Array</tt>}s.
+ * In every entry of the <tt>Map</tt>, the key is the starting address of
+ * a data block, and the value is the <tt>Uint8Array</tt> with the data for
+ * that block.
+ *<br/>
+ * A .hex file can contain a single block of contiguous binary data starting at
+ * memory address 0 (and it's the common case for simple .hex files), but complex files
+ * with several non-contiguous data blocks are also possible, thus the need for
+ * a data structure on top of the <tt>Uint8Array</tt>s.
+ *<br/>
+ * The insertion order of keys in the <tt>Map</tt> is guaranteed to be strictly
+ * ascending. In other words, when iterating through the <tt>Map</tt>, the addresses
+ * will be ordered in ascending order.
+ *<br/>
+ * The parser has an opinionated behaviour, and will throw a descriptive error if it
+ * encounters some malformed input. Check the project's
+ * {@link https://github.com/NordicSemiconductor/nrf-intel-hex#Features|README file} for details.
+ *
+ * @param {String} hexText The contents of a .hex file.
+ * @param {Number} [maxBlockSize=Infinity] Maximum size of the returned <tt>Uint8Array</tt>s.
+ *
+ * @example
+ * import { hexToArrays } from 'nrf-intel-hex';
+ *
+ * let intelHexString =
+ *     ":100000000102030405060708090A0B0C0D0E0F1068\n" +
+ *     ":00000001FF";
+ *
+ * let byteArrays = hexToArrays(intelHexString);
+ *
+ * for (let [address, dataBlock] of byteArrays) {
+ *     console.log('Data block at ', address, ', bytes: ', dataBlock);
+ * }
+ */
+function hexToArrays(hexText, maxBlockSize = Infinity) {
     let blocks = new Map();
 
     let lastCharacterParsed = 0;
@@ -111,7 +144,7 @@ function hexToArrays(hexText, maxBlockSize = Infinity, strict = true) {
 
         // By default, a regexp loop ignores gaps between matches, but
         // we want to be aware of them.
-        if (strict && lastCharacterParsed !== matchResult.index) {
+        if (lastCharacterParsed !== matchResult.index) {
             throw new Error(
                 'Malformed hex file: Could nor parse between characters ' +
                 lastCharacterParsed +
@@ -219,8 +252,29 @@ function hexpad(number) {
 }
 
 
-// Takes a iterable of address→Uint8Array, and returns a string of text
-// This is the opposite of hexToArrays
+/**
+ * Takes a {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map|<tt>Map</tt>}
+ * of {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array|<tt>Uint8Array</tt>}s
+ * as a parameter, and returns a <tt>String</tt> of text representing a .hex
+ * file.
+ * <br/>
+ * The input data structure is equivalent to the output of {hexToArrays}.
+ * <br/>
+ * The writer has an opinionated behaviour. Check the project's
+ * {@link https://github.com/NordicSemiconductor/nrf-intel-hex#Features|README file} for details.
+ *
+ * @param {Map.Uint8Array} blocks The data blocks, indexed by their starting memory address.
+ * @param {Number} [lineSize=16] Maximum number of bytes to be encoded in each data record.
+ *
+ * @example
+ * import { arraysToHex } from 'nrf-intel-hex';
+ *
+ * let blocks = new Map();
+ * let bytes = new Uint8Array(....);
+ * blocks.set(0x0FF80000, bytes); // The block with 'bytes' will start at offset 0x0FF80000
+ *
+ * let string = arraysToHex(blocks);
+ */
 function arraysToHex(blocks, lineSize = 16) {
     let lowAddress  = 0;    // 16 least significant bits of the current addr
     let highAddress = -1 << 16; // 16 most significant bits of the current addr
@@ -349,7 +403,6 @@ function arraysToHex(blocks, lineSize = 16) {
 
                     blockOffset += recordSize;
                     lowAddress += recordSize;
-                    // FIXME: insert 0x00 data record, increase lowAddress
                 }
             }
         }

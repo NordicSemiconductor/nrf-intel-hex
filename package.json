@@ -6,7 +6,8 @@
   "main": "intel-hex.js",
   "author": "Iván Sánchez Ortega <ivan@sanchezortega.es>",
   "scripts": {
-    "test": "jasmine"
+    "test": "jasmine",
+    "docs": "jsdoc intel-hex.js -t node_modules/minami/ -d doc/"
   },
   "devDependencies": {
     "jasmine": "^2.8.0"
