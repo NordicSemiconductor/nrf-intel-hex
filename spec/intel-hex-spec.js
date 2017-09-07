@@ -1,3 +1,6 @@
+'use strict';
+
+
 describe("intel-hex", function() {
 
     let intelHex = typeof window !== 'undefined' ?
