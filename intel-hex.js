@@ -1,4 +1,4 @@
-
+"use strict";
 
 /**
  * Parser/writer for the "Intel hex" format.
