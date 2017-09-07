@@ -22,6 +22,25 @@
 const hexLineRegexp = /:([0-9A-Fa-f]{8,})([0-9A-Fa-f]{2})(?:\r\n|\r|\n|)/g;
 
 
+// https://github.com/uxitten/polyfill/blob/master/string.polyfill.js
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/padStart
+if (!String.prototype.padStart) {
+    String.prototype.padStart = function padStart(targetLength,padString) {
+        targetLength = targetLength>>0; //floor if number or convert non-number to 0;
+        padString = String(padString || ' ');
+        if (this.length > targetLength) {
+            return String(this);
+        }
+        else {
+            targetLength = targetLength-this.length;
+            if (targetLength > padString.length) {
+                padString += padString.repeat(targetLength/padString.length); //append to original to ensure we are longer than needed
+            }
+            return padString.slice(0,targetLength) + String(this);
+        }
+    };
+}
+
 // Takes a Uint8Array as input,
 // Returns an integer in the 0-255 range.
 function checksum(bytes) {
@@ -42,7 +61,7 @@ function checksumTwo(array1, array2) {
 // The insertion order of the returned map is guaranteed to
 // be ascending
 // Concatenates the blocks if possible, up to maxBlockSize
-function mergeBlocks(blocks, maxBlockSize = Infinity) {
+function joinBlocks(blocks, maxBlockSize = Infinity) {
 
     // First pass, create a Map of address→length of contiguous blocks
     let sortedKeys = Array.from(blocks.keys()).sort((a,b)=>a-b);
@@ -107,9 +126,14 @@ function mergeBlocks(blocks, maxBlockSize = Infinity) {
  * The parser has an opinionated behaviour, and will throw a descriptive error if it
  * encounters some malformed input. Check the project's
  * {@link https://github.com/NordicSemiconductor/nrf-intel-hex#Features|README file} for details.
+ *<br/>
+ * If <tt>maxBlockSize</tt> is given, any contiguous data block larger than that will
+ * be split in several blocks.
  *
  * @param {String} hexText The contents of a .hex file.
  * @param {Number} [maxBlockSize=Infinity] Maximum size of the returned <tt>Uint8Array</tt>s.
+ *
+ * @return {Map.Uint8Array}
  *
  * @example
  * import { hexToArrays } from 'nrf-intel-hex';
@@ -207,7 +231,7 @@ function hexToArrays(hexText, maxBlockSize = Infinity) {
                         throw new Error('There is data after an EOF record at record ' + recordCount);
                     }
 
-                    return mergeBlocks(blocks, maxBlockSize);
+                    return joinBlocks(blocks, maxBlockSize);
                     break;
 
                 case 2: // Extended Segment Address Record
@@ -258,7 +282,7 @@ function hexpad(number) {
  * as a parameter, and returns a <tt>String</tt> of text representing a .hex
  * file.
  * <br/>
- * The input data structure is equivalent to the output of {hexToArrays}.
+ * The input data structure is equivalent to the output of {@link module:nrf-intel-hex~hexToArrays|hexToArrays}.
  * <br/>
  * The writer has an opinionated behaviour. Check the project's
  * {@link https://github.com/NordicSemiconductor/nrf-intel-hex#Features|README file} for details.
@@ -266,12 +290,25 @@ function hexpad(number) {
  * @param {Map.Uint8Array} blocks The data blocks, indexed by their starting memory address.
  * @param {Number} [lineSize=16] Maximum number of bytes to be encoded in each data record.
  *
+ * @return {String} String of text with the .hex representation of the input binary data
+ *
  * @example
  * import { arraysToHex } from 'nrf-intel-hex';
  *
  * let blocks = new Map();
  * let bytes = new Uint8Array(....);
  * blocks.set(0x0FF80000, bytes); // The block with 'bytes' will start at offset 0x0FF80000
+ *
+ * let string = arraysToHex(blocks);
+ *
+ * @example
+ * import { arraysToHex } from 'nrf-intel-hex';
+ *
+ * // Input can also be in an alternative syntax using a plain object instead of a Map
+ * let blocks = {
+ *      0: new Uint8Array(....),
+ *      0x01F0: new Uint8Array(....)
+ * };
  *
  * let string = arraysToHex(blocks);
  */
@@ -288,7 +325,7 @@ function arraysToHex(blocks, lineSize = 16) {
         // being used as a dictionary with only integer numeric keys
         if (blocks != null && blocks.__proto__ === Object.prototype){
             if (Object.keys(blocks).every((key=>parseInt(key).toString() === key))) {
-                blocks = new Map(Object.entries(blocks).map(entry=>[parseInt(entry[0]), entry[1]]));
+                blocks = new Map(Object.keys(blocks).map(i=>[parseInt(i), blocks[i]]));
             } else {
                 throw new Error('Input of arraysToHex is an Object but it contains non-numeric keys');
             }

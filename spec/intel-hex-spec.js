@@ -410,6 +410,15 @@ describe("intel-hex", function() {
                     ':0100000001FE\n' +
                     ':00000001FF');
             });
+            it('Outputs one offset record plus one data record on one byte, map-less input syntax', () => {
+                let bytes = (new Uint8Array([1]));
+                let str = intelHex.arraysToHex({0: bytes});
+
+                expect(str).toBe(
+                    ':020000040000FA\n' +
+                    ':0100000001FE\n' +
+                    ':00000001FF');
+            });
             it('Outputs one offset record plus one data record on 16 bytes', () => {
                 let bytes = (new Uint8Array(16)).map((i,j)=>j);
                 let str = intelHex.arraysToHex(new Map([[0, bytes]]));
@@ -758,6 +767,34 @@ describe("intel-hex", function() {
                     [0x050D30, new Uint8Array(0)],
                     [0x000800, bytes2]
                 ]));
+
+                expect(str).toBe(
+                    ':020000040000FA\n' +
+                    ':10000000000102030405060708090A0B0C0D0E0F78\n' +
+                    ':10080000101112131415161718191A1B1C1D1E1F70\n' +
+                    ':020000040005F5\n' +
+                    ':10001000202122232425262728292A2B2C2D2E2F68\n' +
+                    ':100C3000303132333435363738393A3B3C3D3E3F3C\n' +
+                    ':00000001FF');
+            });
+
+            it('Ignores empty blocks, map-less input syntax', () => {
+                let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
+                let bytes2 = (new Uint8Array(16)).map((i,j)=>j+16);
+                let bytes3 = (new Uint8Array(16)).map((i,j)=>j+32);
+                let bytes4 = (new Uint8Array(16)).map((i,j)=>j+48);
+                let str = intelHex.arraysToHex({
+                    0x050010: bytes3,
+                    0x050020: new Uint8Array(0),
+                    0x000000: bytes1,
+                    0x000008: new Uint8Array(0),
+                    0x000010: new Uint8Array(0),
+                    0x00000C: new Uint8Array(0),
+                    0x050E30: new Uint8Array(0),
+                    0x050C30: bytes4,
+                    0x050D30: new Uint8Array(0),
+                    0x000800: bytes2
+                });
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
