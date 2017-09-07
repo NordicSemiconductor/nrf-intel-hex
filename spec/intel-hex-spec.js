@@ -27,7 +27,7 @@ describe("intel-hex", function() {
 
     let intelHex = typeof window !== 'undefined' ?
         module.exports : // When running specRunner on a browser
-        require('../intel-hex');
+        require('../intel-hex');    // When running on node
 
     describe("hexToArrays", function() {
 

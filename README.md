@@ -1,7 +1,7 @@
 
 # nrf-intel-hex
 
-Yet another parser/writer for "[Intel HEX](https://en.wikipedia.org/wiki/Intel_HEX)" files.
+Yet another javascript parser/writer for "[Intel HEX](https://en.wikipedia.org/wiki/Intel_HEX)" files.
 
 [![Build Status](https://travis-ci.org/NordicSemiconductor/nrf-intel-hex.svg?branch=master)](https://travis-ci.org/NordicSemiconductor/nrf-intel-hex)
 
@@ -52,6 +52,8 @@ let string = arraysToHex(blocks);
 ```
 
 The return value will be a string of text containing all the records.
+
+You can also find some API documentation at https://nordicsemiconductor.github.io/nrf-intel-hex/doc/
 
 ## Motivation
 
@@ -127,7 +129,19 @@ The behaviour for writing .hex format is stricter and predictable, in line with 
 * `\n` is used as a record separator.
 * Throws an error if there is data over 0xFFFFFFFF (4GiB)
 
-Both the parser and the writer work in a node.js environment, and in any modern web browser.
+### Compatibility
+
+`nrf-intel-hex` relies on ES2015, [`Map`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map),
+[`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) and
+[`String.prototype.padStart`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/padStart).
+
+It will work out of the box in a Node.js version 8 (or higher), and in all major modern browsers
+(starting with Edge v15, Chrome/Chromium v57, Firefox v52, Safari v10). Node.js version 6
+requires a `String.prototype.padStart` shim.
+
+With proper ES2015→ES5 transpiling and shims, is *should* work in a nodejs environment as old
+as version 4, and in all major browsers (as old as Edge v12, Chrome/Chromium v38,
+Firefox v48, Safari v9).
 
 ### TODO
 
