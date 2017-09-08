@@ -1,4 +1,8 @@
 
+# v0.2.0 (2017-09-08)
+
+* Module noe also exports `overlapBlockSets()` and `joinBlocks()`
+
 # v0.1.1 (2017-09-07)
 
 * Compabitility tweaks, everything works on node.js v6 too

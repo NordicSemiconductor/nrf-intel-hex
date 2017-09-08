@@ -24,7 +24,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Modules</li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-nrf-intel-hex.html">nrf-intel-hex</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-nrf-intel-hex.html#~arraysToHex">arraysToHex</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-nrf-intel-hex.html#~hexToArrays">hexToArrays</a></span></li>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Modules</li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-nrf-intel-hex.html">nrf-intel-hex</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-nrf-intel-hex.html#~arraysToHex">arraysToHex</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-nrf-intel-hex.html#~hexToArrays">hexToArrays</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-nrf-intel-hex.html#~joinBlocks">joinBlocks</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-nrf-intel-hex.html#~overlapBlockSets">overlapBlockSets</a></span></li>
 </nav>
 
 <div id="main">
@@ -203,7 +203,7 @@ The writer has an opinionated behaviour. Check the project's
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="intel-hex.js.html">intel-hex.js</a>, <a href="intel-hex.js.html#line280">line 280</a>
+        <a href="intel-hex.js.html">intel-hex.js</a>, <a href="intel-hex.js.html#line415">line 415</a>
     </li></ul></dd>
     
 
@@ -372,13 +372,23 @@ The writer has an opinionated behaviour. Check the project's
 
 
 <div class="section-examples">
-<h5>Example</h5>
+<h5>Examples</h5>
 
     <pre class="prettyprint"><code>import { arraysToHex } from 'nrf-intel-hex';
 
 let blocks = new Map();
 let bytes = new Uint8Array(....);
 blocks.set(0x0FF80000, bytes); // The block with 'bytes' will start at offset 0x0FF80000
+
+let string = arraysToHex(blocks);</code></pre>
+
+    <pre class="prettyprint"><code>import { arraysToHex } from 'nrf-intel-hex';
+
+// Input can also be in an alternative syntax using a plain object instead of a Map
+let blocks = {
+     0: new Uint8Array(....),
+     0x01F0: new Uint8Array(....)
+};
 
 let string = arraysToHex(blocks);</code></pre>
 
@@ -391,7 +401,7 @@ let string = arraysToHex(blocks);</code></pre>
 
     
 
-    <h4 class="name" id="~hexToArrays"><span class="type-signature">(inner) </span>hexToArrays<span class="signature">(hexText, maxBlockSize<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="~hexToArrays"><span class="type-signature">(inner) </span>hexToArrays<span class="signature">(hexText, maxBlockSize<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Map.Uint8Array}</span></h4>
 
     
 
@@ -417,6 +427,9 @@ will be ordered in ascending order.
 The parser has an opinionated behaviour, and will throw a descriptive error if it
 encounters some malformed input. Check the project's
 <a href="https://github.com/NordicSemiconductor/nrf-intel-hex#Features">README file</a> for details.
+<br/>
+If <tt>maxBlockSize</tt> is given, any contiguous data block larger than that will
+be split in several blocks.
 </div>
 
 
@@ -452,7 +465,7 @@ encounters some malformed input. Check the project's
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="intel-hex.js.html">intel-hex.js</a>, <a href="intel-hex.js.html#line127">line 127</a>
+        <a href="intel-hex.js.html">intel-hex.js</a>, <a href="intel-hex.js.html#line251">line 251</a>
     </li></ul></dd>
     
 
@@ -593,6 +606,27 @@ encounters some malformed input. Check the project's
 
 
 
+<div class="section-returns">
+<h5>Returns:</h5>
+
+        
+
+<dl class="param-type">
+    <dt>
+        Type:
+    </dt>
+    <dd>
+        
+<span class="param-type"><code>Map.Uint8Array</code></span>
+
+
+    </dd>
+</dl>
+
+
+    
+</div>
+
 
 
 <div class="section-examples">
@@ -608,6 +642,397 @@ let byteArrays = hexToArrays(intelHexString);
 
 for (let [address, dataBlock] of byteArrays) {
     console.log('Data block at ', address, ', bytes: ', dataBlock);
+}</code></pre>
+
+</div>
+
+</div>
+        
+            
+<div class="section-method">
+
+    
+
+    <h4 class="name" id="~joinBlocks"><span class="type-signature">(inner) </span>joinBlocks<span class="signature">(blocks, maxBlockSize<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Map.Uint8Array}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Given a <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map"><tt>Map</tt></a>
+of <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array"><tt>Uint8Array</tt></a>s,
+returns a new <tt>Map</tt> of <tt>Uint8Array</tt>s, concatenating together
+those memory blocks that are adjacent.
+<br/>
+The insertion order of keys in the <tt>Map</tt> is guaranteed to be strictly
+ascending. In other words, when iterating through the <tt>Map</tt>, the addresses
+will be ordered in ascending order.
+<br/>
+If <tt>maxBlockSize</tt> is given, blocks will be concatenated together only
+until the joined block reaches this size in bytes. This means that the output
+<tt>Map</tt> might have more entries than the input one.
+<br/>
+If there is any overlap between blocks, an error will be thrown.
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="intel-hex.js.html">intel-hex.js</a>, <a href="intel-hex.js.html#line164">line 164</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>blocks</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Map.Uint8Array</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+                The input memory blocks
+                
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>maxBlockSize</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Number</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    Infinity
+                
+                </td>
+            
+
+            <td class="description last">
+                Maximum size of the returned <tt>Uint8Array</tt>s.
+                
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="section-returns">
+<h5>Returns:</h5>
+
+        
+
+<dl class="param-type">
+    <dt>
+        Type:
+    </dt>
+    <dd>
+        
+<span class="param-type"><code>Map.Uint8Array</code></span>
+
+
+    </dd>
+</dl>
+
+
+<div class="param-desc">
+    The joined memory blocks
+</div>
+
+    
+</div>
+
+
+
+</div>
+        
+            
+<div class="section-method">
+
+    
+
+    <h4 class="name" id="~overlapBlockSets"><span class="type-signature">(inner) </span>overlapBlockSets<span class="signature">()</span><span class="type-signature"> &rarr; {Map.Array.&lt;mixed, Uint8Array>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Given a <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map"><tt>Map</tt></a>
+of <tt>id</tt> to <tt>Map</tt>s of address to
+<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array"><tt>Uint8Array</tt></a>s,
+returns a <tt>Map</tt> of address to tuples (<tt>Arrays</tt>s of length 2) of the form
+<tt>(id, Uint8Array)</tt>s.
+<br/>
+The scenario for using this is having several sets of memory blocks, from several calls to
+<a href="module-nrf-intel-hex.html#~hexToArrays">hexToArrays</a>, each having a different identifier.
+This function locates where those memory block sets overlap, and returns a <tt>Map</tt>
+containing addresses as keys, and arrays as values. Each array will contain 1 or more
+<tt>(id, Uint8Array)</tt> tuples: the identifier of the memory block set that has
+data in that region, and the data itself. When memory block sets overlap, there will
+be more than one tuple.
+<br/>
+The <tt>Uint8Array</tt>s in the output are
+<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/subarray">subarrays</a>
+of the input data.
+<br/>
+The insertion order of keys in the output <tt>Map</tt> is guaranteed to be strictly
+ascending. In other words, when iterating through the <tt>Map</tt>, the addresses
+will be ordered in ascending order.
+<br/>
+When two blocks overlap, the corresponding array of tuples will have the tuples ordered
+in the insertion order of the input <tt>Map</tt> of block sets.
+<br/>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="intel-hex.js.html">intel-hex.js</a>, <a href="intel-hex.js.html#line91">line 91</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="section-returns">
+<h5>Returns:</h5>
+
+        
+
+<dl class="param-type">
+    <dt>
+        Type:
+    </dt>
+    <dd>
+        
+<span class="param-type"><code>Map.Array.&lt;mixed, Uint8Array></code></span>
+
+
+    </dd>
+</dl>
+
+
+<div class="param-desc">
+    The joined memory blocks
+</div>
+
+    
+</div>
+
+
+
+<div class="section-examples">
+<h5>Example</h5>
+
+    <pre class="prettyprint"><code>import { overlapBlockSets, hexToArrays } from 'nrf-intel-hex';
+
+let blocks1 = hexToArrays( hexdata1 );
+let blocks2 = hexToArrays( hexdata2 );
+let blocks3 = hexToArrays( hexdata3 );
+
+let blockSets = new Map([
+ ['blocks A', blocks1],
+ ['blocks B', blocks2],
+ ['blocks C', blocks3]
+]);
+
+let overlappings = overlapBlockSets(blockSets);
+
+for (let [address, tuples] of overlappings) {
+    // if 'tuples' has length > 1, there is an overlap starting at 'address'
+
+    for (let [address, tuples] of overlappings) {
+        let [id, bytes] = tuple;
+        // 'id' in this example is either 'blocks A', 'blocks B' or 'blocks C'
+    }
 }</code></pre>
 
 </div>
@@ -631,7 +1056,7 @@ for (let [address, dataBlock] of byteArrays) {
 <br class="clear">
 
 <footer>
-    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Thu Sep 07 2017 09:13:25 GMT+0200 (DST) using the Minami theme.
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Fri Sep 08 2017 14:24:07 GMT+0200 (DST) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>

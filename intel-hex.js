@@ -36,12 +36,133 @@ function checksumTwo(array1, array2) {
     return -( partial1 + partial2 ) & 0xFF;
 }
 
+/**
+ * Given a {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map|<tt>Map</tt>}
+ * of <tt>id</tt> to <tt>Map</tt>s of address to
+ * {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array|<tt>Uint8Array</tt>}s,
+ * returns a <tt>Map</tt> of address to tuples (<tt>Arrays</tt>s of length 2) of the form
+ * <tt>(id, Uint8Array)</tt>s.
+ *<br/>
+ * The scenario for using this is having several sets of memory blocks, from several calls to
+ * {@link module:nrf-intel-hex~hexToArrays|hexToArrays}, each having a different identifier.
+ * This function locates where those memory block sets overlap, and returns a <tt>Map</tt>
+ * containing addresses as keys, and arrays as values. Each array will contain 1 or more
+ * <tt>(id, Uint8Array)</tt> tuples: the identifier of the memory block set that has
+ * data in that region, and the data itself. When memory block sets overlap, there will
+ * be more than one tuple.
+ *<br/>
+ * The <tt>Uint8Array</tt>s in the output are
+ * {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/subarray|subarrays}
+ * of the input data.
+ *<br/>
+ * The insertion order of keys in the output <tt>Map</tt> is guaranteed to be strictly
+ * ascending. In other words, when iterating through the <tt>Map</tt>, the addresses
+ * will be ordered in ascending order.
+ *<br/>
+ * When two blocks overlap, the corresponding array of tuples will have the tuples ordered
+ * in the insertion order of the input <tt>Map</tt> of block sets.
+ *<br/>
+ *
+ * @param {Map.Map.Uint8Array} The input of memory block sets
+ *
+ * @example
+ * import { overlapBlockSets, hexToArrays } from 'nrf-intel-hex';
+ *
+ * let blocks1 = hexToArrays( hexdata1 );
+ * let blocks2 = hexToArrays( hexdata2 );
+ * let blocks3 = hexToArrays( hexdata3 );
+ *
+ * let blockSets = new Map([
+ *  ['blocks A', blocks1],
+ *  ['blocks B', blocks2],
+ *  ['blocks C', blocks3]
+ * ]);
+ *
+ * let overlappings = overlapBlockSets(blockSets);
+ *
+ * for (let [address, tuples] of overlappings) {
+ *     // if 'tuples' has length > 1, there is an overlap starting at 'address'
+ *
+ *     for (let [address, tuples] of overlappings) {
+ *         let [id, bytes] = tuple;
+ *         // 'id' in this example is either 'blocks A', 'blocks B' or 'blocks C'
+ *     }
+ * }
+ * @return {Map.Array<mixed,Uint8Array>} The joined memory blocks
+ */
+function overlapBlockSets(blockSets) {
 
-// Takes a Map of address→Uint8Arrays
-// Returns a Map of address→Uint8Arrays
-// The insertion order of the returned map is guaranteed to
-// be ascending
-// Concatenates the blocks if possible, up to maxBlockSize
+    // First pass: create a list of addresses where any block starts or ends.
+    let cuts = new Set();
+    for (let [setId, blocks] of blockSets) {
+        for (let [address, block] of blocks) {
+            cuts.add(address);
+            cuts.add(address + block.length);
+        }
+    }
+
+    let orderedCuts = Array.from(cuts.values()).sort((a,b)=>a-b);
+    let overlaps = new Map();
+
+    // Second pass: iterate through the cuts, get slices of every intersecting blockset
+    for (let i=0, l=orderedCuts.length-1; i<l; i++) {
+        let cut = orderedCuts[i];
+        let nextCut = orderedCuts[i+1];
+        let tuples = [];
+
+        for (let [setId, blocks] of blockSets) {
+            // Find the block with the highest address that is equal or lower to
+            // the current cut (if any)
+            let blockAddr = Array.from(blocks.keys()).reduce((acc, val)=>{
+                if (val > cut) {
+                    return acc;
+                }
+                return Math.max( acc, val );
+            }, -1);
+
+            if (blockAddr !== -1) {
+                let block = blocks.get(blockAddr);
+                let subBlockStart = cut - blockAddr;
+                let subBlockEnd = nextCut - blockAddr;
+
+                if (subBlockStart < block.length) {
+                    tuples.push([ setId, block.subarray(subBlockStart, subBlockEnd) ]);
+                }
+            }
+        }
+
+        if (tuples.length) {
+            overlaps.set(cut, tuples);
+        }
+    }
+
+    return overlaps;
+}
+
+
+
+
+/**
+ * Given a {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map|<tt>Map</tt>}
+ * of {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array|<tt>Uint8Array</tt>}s,
+ * returns a new <tt>Map</tt> of <tt>Uint8Array</tt>s, concatenating together
+ * those memory blocks that are adjacent.
+ *<br/>
+ * The insertion order of keys in the <tt>Map</tt> is guaranteed to be strictly
+ * ascending. In other words, when iterating through the <tt>Map</tt>, the addresses
+ * will be ordered in ascending order.
+ *<br/>
+ * If <tt>maxBlockSize</tt> is given, blocks will be concatenated together only
+ * until the joined block reaches this size in bytes. This means that the output
+ * <tt>Map</tt> might have more entries than the input one.
+ *<br/>
+ * If there is any overlap between blocks, an error will be thrown.
+ *
+ * @param {Map.Uint8Array} blocks The input memory blocks
+ * @param {Number} [maxBlockSize=Infinity] Maximum size of the returned <tt>Uint8Array</tt>s.
+ *
+ * @return {Map.Uint8Array} The joined memory blocks
+ */
 function joinBlocks(blocks, maxBlockSize = Infinity) {
 
     // First pass, create a Map of address→length of contiguous blocks
@@ -439,6 +560,8 @@ function arraysToHex(blocks, lineSize = 16) {
 
 
 module.exports = {
+    joinBlocks: joinBlocks,
+    overlapBlockSets: overlapBlockSets,
     hexToArrays: hexToArrays,
     arraysToHex: arraysToHex
 };
