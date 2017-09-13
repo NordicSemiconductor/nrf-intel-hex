@@ -53,7 +53,8 @@ let string = arraysToHex(blocks);
 
 The return value will be a string of text containing all the records.
 
-You can also find some API documentation at https://nordicsemiconductor.github.io/nrf-intel-hex/doc/
+This module also provides some utility functions for handling `Map`s of `Uint8Array`s.
+Check the full API documentation at https://nordicsemiconductor.github.io/nrf-intel-hex/doc/
 
 ## Motivation
 

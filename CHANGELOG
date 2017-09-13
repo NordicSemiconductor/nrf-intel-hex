@@ -1,7 +1,11 @@
 
+# v0.3.0 (2017-09-13)
+
+* Module now also exports `paginate()`
+
 # v0.2.0 (2017-09-08)
 
-* Module noe also exports `overlapBlockSets()` and `joinBlocks()`
+* Module now also exports `overlapBlockSets()` and `joinBlocks()`
 
 # v0.1.1 (2017-09-07)
 

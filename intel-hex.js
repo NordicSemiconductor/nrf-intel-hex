@@ -63,7 +63,7 @@ function checksumTwo(array1, array2) {
  * in the insertion order of the input <tt>Map</tt> of block sets.
  *<br/>
  *
- * @param {Map.Map.Uint8Array} The input of memory block sets
+ * @param {Map.Map.Uint8Array} The input memory block sets
  *
  * @example
  * import { overlapBlockSets, hexToArrays } from 'nrf-intel-hex';
@@ -88,7 +88,7 @@ function checksumTwo(array1, array2) {
  *         // 'id' in this example is either 'blocks A', 'blocks B' or 'blocks C'
  *     }
  * }
- * @return {Map.Array<mixed,Uint8Array>} The joined memory blocks
+ * @return {Map.Array<mixed,Uint8Array>} The map of possibly overlapping memory blocks
  */
 function overlapBlockSets(blockSets) {
 
@@ -138,6 +138,108 @@ function overlapBlockSets(blockSets) {
 
     return overlaps;
 }
+
+
+/**
+ * Given the output of the {@link module:nrf-intel-hex~overlapBlockSets|overlapBlockSets}
+ * (a <tt>Map</tt> of address to an <tt>Array</tt> of <tt>(id, Uint8Array)</tt> tuples),
+ * returns a {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map|<tt>Map</tt>}
+ * of address to {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array|<tt>Uint8Array</tt>}s.
+ *<br/>
+ * The output <tt>Map</tt> contains as many entries as the input one (using the same addresses
+ * as keys), but the value for each entry will be the <tt>Uint8Array</tt> of the <b>last</b>
+ * tuple for each address in the input data.
+ *<br/>
+ * The scenario is wanting to join together several parsed .hex files, not worrying about
+ * their overlaps.
+ *<br/>
+ *
+ * @param {Map.Array<mixed,Uint8Array>} overlaps The (possibly overlapping) input memory blocks
+ * @return {Map.Uint8Array} The flattened memory blocks
+ */
+function flattenOverlaps(overlaps) {
+    return new Map(
+        Array.from(overlaps.entries()).map(([address, tuples]) => {
+            return [address, tuples[tuples.length - 1][1] ];
+        })
+    );
+}
+
+
+
+/**
+ * Takes a {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map|<tt>Map</tt>}
+ * of address to {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array|<tt>Uint8Array</tt>}s
+ * as an input, and returns another <tt>Map</tt> of address to <tt>Uint8Array</tt>s, where:
+ *
+ * <ul>
+ *  <li>Each address is a multiple of <tt>pageSize</tt></li>
+ *  <li>The size of each <tt>Uint8Array</tt> is exactly <tt>pageSize</tt></li>
+ *  <li>Bytes from the input map to bytes in the output</li>
+ *  <li>Bytes not in the input are replaced by a padding value</li>
+ *  <li>If the optional start and end parameters are used, only bytes
+ *  between those addresses will be in the output.</li>
+ * </ul>
+ *<br/>
+ * The scenario is wanting to prepare pages of bytes for a write operation, where the write
+ * operation affects a whole page/sector at once.
+ *<br/>
+ * The insertion order of keys in the output <tt>Map</tt> is guaranteed to be strictly
+ * ascending. In other words, when iterating through the <tt>Map</tt>, the addresses
+ * will be ordered in ascending order.
+ *<br/>
+ * The <tt>Uint8Array</tt> in the output will be newly allocated.
+ *<br/>
+ *
+ * @param {Map.Uint8Array} blocks The input memory blocks
+ * @param {Number} [pageSize=1024] The size of the output pages
+ * @param {Number} [pad=0xFF] The byte value to use for padding
+// * @param {Number} [start=-Infinity] The size of the output pages
+// * @param {Number} [end=Infinity] The size of the output pages
+ * @return {Map.Uint8Array} The output page-sized memory blocks
+ */
+function paginate(blocks, pageSize=1024, pad=0xFF/*, start=-Infinity, end=Infinity*/) {
+    if (pageSize <= 0) {
+        throw new Error('Page size must be greater than zero');
+    }
+//     let pageAddr = -Infinity;
+    let outPages = new Map();
+    let page;
+
+    let sortedKeys = Array.from(blocks.keys()).sort((a,b)=>a-b);
+
+    for (let i=0,l=sortedKeys.length; i<l; i++) {
+        const blockAddr = sortedKeys[i];
+        const block = blocks.get(blockAddr);
+        const blockLength = block.length;
+        const blockEnd = blockAddr + blockLength;
+
+        for (let pageAddr = blockAddr - (blockAddr % pageSize); pageAddr < blockEnd; pageAddr += pageSize) {
+            page = outPages.get(pageAddr);
+            if (!page) {
+                page = new Uint8Array(pageSize);
+                page.fill(pad);
+                outPages.set(pageAddr, page);
+            }
+
+            const offset = pageAddr - blockAddr;
+            let subBlock;
+            if (offset <= 0) {
+                // First page which intersects the block
+                subBlock = block.subarray(0, Math.min(pageSize + offset, blockLength));
+                page.set(subBlock, -offset);
+            } else {
+                // Any other page which intersects the block
+                subBlock = block.subarray(offset, offset + Math.min(pageSize, blockLength - offset));
+                page.set(subBlock, 0);
+            }
+        }
+    }
+
+    return outPages;
+}
+
+
 
 
 
@@ -562,6 +664,8 @@ function arraysToHex(blocks, lineSize = 16) {
 module.exports = {
     joinBlocks: joinBlocks,
     overlapBlockSets: overlapBlockSets,
+    flattenOverlaps: flattenOverlaps,
+    paginate: paginate,
     hexToArrays: hexToArrays,
     arraysToHex: arraysToHex
 };

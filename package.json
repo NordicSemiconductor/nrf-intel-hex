@@ -1,6 +1,6 @@
 {
   "name": "nrf-intel-hex",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "BSD",
   "description": "Parser/writer for the Intel HEX format",
   "main": "intel-hex.js",
