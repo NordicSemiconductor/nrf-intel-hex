@@ -240,7 +240,39 @@ function paginate(blocks, pageSize=1024, pad=0xFF/*, start=-Infinity, end=Infini
 }
 
 
+/**
+ * Given a {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map|<tt>Map</tt>}
+ * of address to {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array|<tt>Uint8Array</tt>}s
+ * and an offset, this function locates the <tt>Uint8Array</tt> which contains the offset,
+ * and returns the four bytes held at that offset, as a 32-bit unsigned integer.
+ *
+ *<br/>
+ * Behaviour is similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint32|<tt>DataView.prototype.getUint32</tt>},
+ * except that this operates over a <tt>Map</tt> of <tt>Uint8Array</tt>s instead of
+ * over an <tt>ArrayBuffer</tt>, and that this may return <tt>undefined</tt> if
+ * the address is not <em>entirely</em> contained within one of the <tt>Uint8Array</tt>s.
+ *<br/>
+ *
+ * @param {Map.Uint8Array} blocks The input memory blocks
+ * @param {Number} offset The memory offset to read the data
+ * @param {Boolean} [littleEndian=false] Whether to fetch the 4 bytes as a little- or big-endian integer
+ * @return {Number} An unsigned 32-bit integer number
+ */
+function getUint32(blocks, offset, littleEndian) {
+    let keys = Array.from(blocks.keys());
 
+    for (let i=0,l=keys.length; i<l; i++) {
+        const blockAddr = keys[i];
+        const block = blocks.get(blockAddr);
+        const blockLength = block.length;
+        const blockEnd = blockAddr + blockLength;
+
+        if (blockAddr <= offset && (offset+4) <= blockEnd) {
+            return (new DataView(block.buffer, offset - blockAddr, 4)).getUint32(0, littleEndian);
+        }
+    }
+    return;
+}
 
 
 
@@ -667,5 +699,6 @@ module.exports = {
     flattenOverlaps: flattenOverlaps,
     paginate: paginate,
     hexToArrays: hexToArrays,
-    arraysToHex: arraysToHex
+    arraysToHex: arraysToHex,
+    getUint32: getUint32
 };

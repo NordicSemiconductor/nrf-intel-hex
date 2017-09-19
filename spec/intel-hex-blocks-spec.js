@@ -544,6 +544,77 @@ describe("intel-hex block operations", function() {
                 ]));
             });
 
+            /// TODO: Add tests for the padding character
+
+        });
+
+    });
+
+
+    describe("getUint32", ()=>{
+        it('Returns undefined on empty input blocks', ()=>{
+            const blocks = new Map([]);
+            expect(intelHex.getUint32(blocks, 0)).toBe(undefined);
+        });
+
+        it('Gets a Uint32 at offset zero', ()=>{
+            const blocks = new Map([
+                [0x0, new Uint8Array([0x01, 0x02, 0x03, 0x04])]
+            ]);
+            expect(intelHex.getUint32(blocks, 0)).toBe(0x01020304);
+        });
+        it('Gets a little-endian Uint32 at offset zero', ()=>{
+            const blocks = new Map([
+                [0x0, new Uint8Array([0x01, 0x02, 0x03, 0x04])]
+            ]);
+            expect(intelHex.getUint32(blocks, 0, true)).toBe(0x04030201);
+        });
+
+        it('Gets a Uint32 at non-zero offset', ()=>{
+            const bytes = (new Uint8Array(16)).map((i,j)=>j+1);
+            const blocks = new Map([[0, bytes]]);
+
+            expect(intelHex.getUint32(blocks, 8)).toBe(0x090A0B0C);
+        });
+        it('Gets a little-endian Uint32 at non-zero offset', ()=>{
+            const bytes = (new Uint8Array(16)).map((i,j)=>j+1);
+            const blocks = new Map([[0, bytes]]);
+
+            expect(intelHex.getUint32(blocks, 8, true)).toBe(0x0C0B0A09);
+        });
+
+        it('Gets a Uint32 at non-zero offset with several blocks', ()=>{
+            const bytes1 = (new Uint8Array(16)).map((i,j)=>j+0x01);
+            const bytes2 = (new Uint8Array(16)).map((i,j)=>j+0x11);
+            const bytes3 = (new Uint8Array(16)).map((i,j)=>j+0x21);
+            const blocks = new Map([
+                [0x1000, bytes1],
+                [0x2000, bytes2],
+                [0x3000, bytes3]
+            ]);
+
+            expect(intelHex.getUint32(blocks, 0x2004)).toBe(0x15161718);
+        });
+        it('Gets a little-endian Uint32 at non-zero offset with several blocks', ()=>{
+            const bytes1 = (new Uint8Array(16)).map((i,j)=>j+0x01);
+            const bytes2 = (new Uint8Array(16)).map((i,j)=>j+0x11);
+            const bytes3 = (new Uint8Array(16)).map((i,j)=>j+0x21);
+            const blocks = new Map([
+                [0x1000, bytes1],
+                [0x2000, bytes2],
+                [0x3000, bytes3]
+            ]);
+
+            expect(intelHex.getUint32(blocks, 0x2004, true)).toBe(0x18171615);
+        });
+
+        it('Returns undefined on partial overlaps', ()=>{
+            const blocks = new Map([
+                [0x0, new Uint8Array([0x01, 0x02, 0x03, 0x04])],
+                [0x4, new Uint8Array([0x05, 0x06, 0x07, 0x08])],
+
+            ]);
+            expect(intelHex.getUint32(blocks, 2, true)).toBe(undefined);
         });
 
     });
