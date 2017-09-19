@@ -1,4 +1,8 @@
 
+# v0.4.0 (2017-09-13)
+
+* Module now also exports `getUint32()`
+
 # v0.3.0 (2017-09-13)
 
 * Module now also exports `paginate()`
