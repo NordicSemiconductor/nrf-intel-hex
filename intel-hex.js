@@ -391,7 +391,7 @@ function hexToArrays(hexText, maxBlockSize = Infinity) {
     let matchResult;
     let recordCount = 0;
 
-    // Upper Linear Base Address, the 16 most significant bits (1 bytes) of
+    // Upper Linear Base Address, the 16 most significant bits (2 bytes) of
     // the current 32-bit (4-byte) address
     // In practice this is a offset that is summed to the "load offset" of the
     // data records

@@ -396,7 +396,7 @@ describe("intel-hex parse/write", function() {
         });
     });
 
-    describe("hexToArrays", function() {
+    describe("arraysToHex", function() {
 
         it('Outputs EOF on empty input', () => {
             let str = intelHex.arraysToHex(new Map());
