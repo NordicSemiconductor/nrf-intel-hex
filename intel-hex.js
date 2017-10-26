@@ -118,6 +118,7 @@ export default class MemoryMap {
     keys()       { return this._blocks.keys();       }
     values()     { return this._blocks.values();     }
     get size()   { return this._blocks.size;         }
+    [Symbol.iterator]() { return this._blocks[Symbol.iterator](); }
 
 
     /**
@@ -457,7 +458,7 @@ export default class MemoryMap {
      * @return {Map.Uint8Array} The flattened memory blocks
      */
     static flattenOverlaps(overlaps) {
-        return new Map(
+        return new MemoryMap(
             Array.from(overlaps.entries()).map(([address, tuples]) => {
                 return [address, tuples[tuples.length - 1][1] ];
             })
@@ -487,7 +488,7 @@ export default class MemoryMap {
      * The <tt>Uint8Array</tt>s in the output will be newly allocated.
      *<br/>
      *
-     * @param {Number} [pageSize=1024] The size of the output pages
+     * @param {Number} [pageSize=1024] The size of the output pages, in bytes
      * @param {Number} [pad=0xFF] The byte value to use for padding
      * @return {Map.Uint8Array} The output page-sized memory blocks
      */
@@ -496,7 +497,7 @@ export default class MemoryMap {
             throw new Error('Page size must be greater than zero');
         }
     //     let pageAddr = -Infinity;
-        let outPages = new Map();
+        let outPages = new MemoryMap();
         let page;
 
         let sortedKeys = Array.from(this.keys()).sort((a,b)=>a-b);

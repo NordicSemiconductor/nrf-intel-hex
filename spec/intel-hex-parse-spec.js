@@ -22,17 +22,14 @@ if (!String.prototype.padStart) {
 }
 
 
+// Overwrite the "MemoryMap" if running on Node.
+// When running on a browser, the "MemoryMap" global is already define thanks to the IIFE.
+if (typeof window === 'undefined') {
+    global.MemoryMap = require('../intel-hex.cjs');
+}
 
-describe("MemoryMap", function() {
 
-//     let MemoryMap = typeof window !== 'undefined' ?
-//         module.exports : // When running specRunner on a browser
-//         require('../intel-hex');    // When running on node
-
-    if (typeof window === 'undefined') {
-        MemoryMap = require('../intel-hex');    // When running on node
-    }
-
+describe("MemoryMap fromHex/asHex", function() {
 
     describe("constructor", function() {
 
@@ -943,7 +940,7 @@ describe("MemoryMap", function() {
         });
     });
 
-    describe("hexToArrays+arraysToHex idempotence", function() {
+    describe("fromHex+asHexString idempotence", function() {
         it('8 consecutive 16-byte records', () => {
             let str = ':020000040001F9\n' +
                 ':10C00000C039002049C1010063C1010065C10100C0\n' +
@@ -962,7 +959,7 @@ describe("MemoryMap", function() {
         });
     });
 
-    describe("arraysToHex+hexToArrays idempotence", function() {
+    describe("asHexString+fromHex idempotence", function() {
         it('keeps 256B', () => {
             let bytes = (new Uint8Array(0x100)).map((i,j)=>j);
             let blocks = new MemoryMap([[0, bytes]]);
