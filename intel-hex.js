@@ -55,7 +55,7 @@ Number.isInteger = Number.isInteger || function(value) {
  *
  * Represents a memory layout, with main focus into (possibly sparse) blocks of data.
  *<br/>
- * A MemoryMap is a subclass of {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map|<tt>Map</tt>}.
+ * A MemoryMap acts as a subclass of {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map|<tt>Map</tt>}.
  * In every entry of it, the key is the starting address of a data block (an integer number),
  * and the value is the <tt>Uint8Array</tt> with the data for that block.
  *<br/>
@@ -65,24 +65,59 @@ Number.isInteger = Number.isInteger || function(value) {
  * the need for a data structure on top of the <tt>Uint8Array</tt>s.
  */
 
-export default class MemoryMap extends Map {
+export default class MemoryMap {
     constructor(blocks, namedAddresses = []) {
         // TODO: Add type assertions: should be able to only add numeric keys and
         // Uint8Array values.
-        super.constructor(blocks);
+//         super(blocks);
+
+        this._blocks = new Map();
+
+        if (blocks && typeof blocks[Symbol.iterator] === 'function') {
+            this._blocks = new Map();
+
+            for (const tuple of blocks) {
+                if (!(tuple instanceof Array) || tuple.length !== 2) {
+                    throw new Error('First parameter to MemoryMap constructor must be an iterable of [addr, bytes] or undefined');
+                }
+                this.set(tuple[0], tuple[1]);
+            }
+        } else if (typeof blocks === 'object') {
+            // Try iterating through the object's keys
+            const addrs = Object.keys(blocks);
+            for (const addr of addrs) {
+                this.set(parseInt(addr), blocks[addr]);
+            }
+
+        } else if (blocks !== undefined && blocks !== null) {
+            throw new Error('First parameter to MemoryMap constructor must be an iterable of [addr, bytes] or undefined');
+        }
 
         this.namedAddresses = new Map(namedAddresses);
     }
 
-    set(key, value) {
-        if (!Number.isInteger(key)) {
+    // Delegate the following to the 'this._blocks' Map:
+    set(addr, value) {
+        if (!Number.isInteger(addr)) {
             throw new Error('Address passed to MemoryMap is not an integer');
+        }
+        if (addr < 0) {
+            throw new Error('Address passed to MemoryMap is negative');
         }
         if (!(value instanceof Uint8Array)) {
             throw new Error('Bytes passed to MemoryMap are not an Uint8Array');
         }
-        return super.set(key, value);
+        return this._blocks.set(addr, value);
     }
+    get(addr)    { return this._blocks.get(addr);    }
+    clear()      { return this._blocks.clear();      }
+    delete(addr) { return this._blocks.delete(addr); }
+    entries()    { return this._blocks.entries();    }
+    forEach(callback, that) { return this._blocks.forEach(callback, that); }
+    has(addr)    { return this._blocks.has(addr);    }
+    keys()       { return this._blocks.keys();       }
+    values()     { return this._blocks.values();     }
+    get size()   { return this._blocks.size;         }
 
 
     /**
@@ -258,7 +293,7 @@ export default class MemoryMap extends Map {
      *
      * @return {Map.Uint8Array} The joined memory blocks
      */
-    joinBlocks(maxBlockSize = Infinity) {
+    join(maxBlockSize = Infinity) {
 
         // First pass, create a Map of address→length of contiguous blocks
         let sortedKeys = Array.from(this.keys()).sort((a,b)=>a-b);
@@ -286,7 +321,7 @@ export default class MemoryMap extends Map {
         }
 
         // Second pass: allocate memory for the contiguous blocks and copy data around.
-        let mergedBlocks = new Map();
+        let mergedBlocks = new MemoryMap();
         let mergingBlock;
         let mergingBlockAddr = -1;
         for (let i=0,l=sortedKeys.length; i<l; i++) {
