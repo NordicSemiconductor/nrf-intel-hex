@@ -767,6 +767,85 @@ class MemoryMap {
         return cloned;
     }
 
+
+    /**
+     * Given one <tt>Uint8Array</tt>, looks through its contents and returns a new
+     * {@linkcode MemoryMap}, stripping away those regions where there are only
+     * padding bytes.
+     * <br/>
+     * The start of the input <tt>Uint8Array</tt> is assumed to be offset zero for the output.
+     * <br/>
+     * The use case here is dumping memory from a working device and try to see the
+     * "interesting" memory regions it has. This assumes that there is a constant,
+     * predefined padding byte value being used in the "non-interesting" regions.
+     * In other words: this will work as long as the dump comes from a flash memory
+     * which has been previously erased (thus <tt>0xFF</tt>s for padding), or from a
+     * previously blanked HDD (thus <tt>0x00</tt>s for padding).
+     * <br/>
+     * This method uses <tt>subarray</tt> on the input data, and thus does not allocate memory
+     * for the <tt>Uint8Array</tt>s.
+     *
+     * @param {Uint8Array} bytes The input data
+     * @param {Number} [padByte=0xFF] The value of the byte assumed to be used as padding
+     * @param {Number} [minPadLength=64] The minimum number of consecutive pad bytes to
+     * be considered actual padding
+     *
+     * @return {MemoryMap}
+     */
+    static fromPaddedUint8Array(bytes, padByte=0xFF, minPadLength=64) {
+
+        if (!(bytes instanceof Uint8Array)) {
+            throw new Error('Bytes passed to fromPaddedUint8Array are not an Uint8Array');
+        }
+
+        // The algorithm used is naïve and checks every byte.
+        // An obvious optimization would be to implement Boyer-Moore
+        // (see https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore_string_search_algorithm )
+        // or otherwise start skipping up to minPadLength bytes when going through a non-pad
+        // byte.
+        // Anyway, we could expect a lot of cases where there is a majority of pad bytes,
+        // and the algorithm should check most of them anyway, so the perf gain is questionable.
+
+        let memMap = new MemoryMap();
+        let consecutivePads = 0;
+        let lastNonPad = -1;
+        let firstNonPad = 0;
+        let skippingBytes = false;
+        const l = bytes.length;
+
+        for (let addr = 0; addr < l; addr++) {
+            const byte = bytes[addr];
+
+            if (byte === padByte) {
+                consecutivePads++;
+                if (consecutivePads >= minPadLength) {
+                    // Edge case: ignore writing a zero-length block when skipping
+                    // bytes at the beginning of the input
+                    if (lastNonPad !== -1) {
+                        /// Add the previous block to the result memMap
+                        memMap.set(firstNonPad, bytes.subarray(firstNonPad, lastNonPad+1));
+                    }
+
+                    skippingBytes = true;
+                }
+            } else {
+                if (skippingBytes) {
+                    skippingBytes = false;
+                    firstNonPad = addr;
+                }
+                lastNonPad = addr;
+                consecutivePads = 0;
+            }
+        }
+
+        // At EOF, add the last block if not skipping bytes already (and input not empty)
+        if (!skippingBytes && lastNonPad !== -1) {
+            memMap.set(firstNonPad, bytes.subarray(firstNonPad, l));
+        }
+
+        return memMap;
+    }
+
 }
 
 

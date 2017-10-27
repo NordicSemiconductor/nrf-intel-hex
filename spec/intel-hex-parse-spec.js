@@ -980,4 +980,119 @@ describe("MemoryMap fromHex/asHex", function() {
         });
     });
 
+    describe("fromPaddedUint8Array", function() {
+        it('Throws error on non-Uint8Array input', () => {
+            expect(()=>{
+                let memMap = MemoryMap.fromPaddedUint8Array(true);
+            }).toThrow(new Error('Bytes passed to fromPaddedUint8Array are not an Uint8Array'));
+
+            expect(()=>{
+                let memMap = MemoryMap.fromPaddedUint8Array('foobar');
+            }).toThrow(new Error('Bytes passed to fromPaddedUint8Array are not an Uint8Array'));
+
+            expect(()=>{
+                let memMap = MemoryMap.fromPaddedUint8Array([1,2,3,4]);
+            }).toThrow(new Error('Bytes passed to fromPaddedUint8Array are not an Uint8Array'));
+        });
+
+        it('Handles 0-byte input', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array());
+
+            expect(memMap).toEqual(new MemoryMap());
+        });
+
+        it('Handles 1-byte non-pad input', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array([0x80]));
+
+            expect(memMap).toEqual(new MemoryMap([[0, new Uint8Array([0x80])]]));
+        });
+
+        it('Handles 1-byte pad input', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array([0xFF]), 0xFF, 1);
+
+            expect(memMap).toEqual(new MemoryMap());
+        });
+
+        it('Handles 2-byte pad + non-pad input', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array([0xFF, 0x80]), 0xFF, 1);
+
+            expect(memMap).toEqual(new MemoryMap([[1, new Uint8Array([0x80])]]));
+        });
+        it('Handles 2-byte non-pad + pad input', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array([0x80, 0xFF]), 0xFF, 1);
+
+            expect(memMap).toEqual(new MemoryMap([[0, new Uint8Array([0x80])]]));
+        });
+
+        it('Handles 2-byte pad + non-pad input, non-standard pad byte', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array([0xFF, 0x80]), 0x80, 1);
+
+            expect(memMap).toEqual(new MemoryMap([[0, new Uint8Array([0xFF])]]));
+        });
+        it('Handles 2-byte non-pad + pad input, non-standard pad byte', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array([0x80, 0xFF]), 0x80, 1);
+
+            expect(memMap).toEqual(new MemoryMap([[1, new Uint8Array([0xFF])]]));
+        });
+
+        it('Skips only N=2 or more consecutive pad bytes, 1', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array(
+                [0x01, 0x02, 0x03, 0xFF, 0x04, 0x05, 0xFF, 0xFF, 0x06, 0x07, 0xFF]
+            ), 0xFF, 2);
+
+            expect(memMap).toEqual(new MemoryMap([
+                [0, new Uint8Array([0x01, 0x02, 0x03, 0xFF, 0x04, 0x05])],
+                [8, new Uint8Array([0x06, 0x07, 0xFF])]
+            ]));
+        });
+
+        it('Skips only N=2 or more consecutive pad bytes, 2', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array(
+                [0xFF, 0x01, 0x02, 0x03, 0xFF, 0xFF, 0x04, 0x05, 0xFF, 0x06, 0x07, 0xFF, 0xFF]
+            ), 0xFF, 2);
+
+            expect(memMap).toEqual(new MemoryMap([
+                [0, new Uint8Array([0xFF, 0x01, 0x02, 0x03])],
+                [6, new Uint8Array([0x04, 0x05, 0xFF, 0x06, 0x07])]
+            ]));
+        });
+
+        it('Skips only N=2 or more consecutive pad bytes, 3', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array(
+                [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x02, 0x03, 0xFF, 0x04, 0x05, 0xFF, 0x06, 0x07, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
+            ), 0xFF, 2);
+
+            expect(memMap).toEqual(new MemoryMap([
+                [5, new Uint8Array([0x01, 0x02, 0x03, 0xFF, 0x04, 0x05, 0xFF, 0x06, 0x07])]
+            ]));
+        });
+
+        it('Skips only N=4 or more consecutive pad bytes, 1', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array(
+                [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x02, 0x03, 0xFF, 0x04, 0x05, 0xFF, 0x06, 0x07, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
+            ), 0xFF, 4);
+
+            expect(memMap).toEqual(new MemoryMap([
+                [5, new Uint8Array([0x01, 0x02, 0x03, 0xFF, 0x04, 0x05, 0xFF, 0x06, 0x07])]
+            ]));
+        });
+
+        it('Skips only N=4 or more consecutive pad bytes, 2', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array(
+                [0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                 0x01, 0x02, 0x03,
+                 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                 0x04, 0xFF, 0xFF, 0xFF, 0x05,
+                 0xFF, 0xFF, 0xFF, 0xFF,
+                 0x06, 0x07,
+                 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
+            ), 0xFF, 4);
+
+            expect(memMap).toEqual(new MemoryMap([
+                [ 5, new Uint8Array([0x01, 0x02, 0x03])],
+                [14, new Uint8Array([0x04, 0xFF, 0xFF, 0xFF, 0x05])],
+                [23, new Uint8Array([0x06, 0x07])],
+            ]));
+        });
+    });
 });
