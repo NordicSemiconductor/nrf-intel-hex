@@ -619,20 +619,6 @@ class MemoryMap {
             throw new Error('Size of record must be greater than zero');
         }
 
-//         if (!(blocks instanceof Map)) {
-//             // Cast the blocks into a map if possible. Namely, when blocks is a plain Object
-//             // being used as a dictionary with only integer numeric keys
-//             if (blocks != null && blocks.__proto__ === Object.prototype){
-//                 if (Object.keys(blocks).every((key=>parseInt(key).toString() === key))) {
-//                     blocks = new Map(Object.keys(blocks).map(i=>[parseInt(i), blocks[i]]));
-//                 } else {
-//                     throw new Error('Input of arraysToHex is an Object but it contains non-numeric keys');
-//                 }
-//             } else {
-//                 throw new Error('Input of arraysToHex is neither a Map nor a plain Object');
-//             }
-//         }
-
         // Placeholders
         let offsetRecord = new Uint8Array(6);
         let recordHeader = new Uint8Array(4);
