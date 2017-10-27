@@ -1,8 +1,6 @@
 
 /**
  * Parser/writer for the "Intel hex" format.
- *
- * @module nrf-intel-hex
  */
 
 /*
@@ -16,7 +14,7 @@
  * Record mark         :
  * 8 or more hex chars  ([0-9A-Fa-f]{8,})
  * Checksum                              ([0-9A-Fa-f]{2})
- * Optional newline                                      (?:\r\n|\r|\n)?
+ * Optional newline                                      (?:\r\n|\r|\n|)
  */
 const hexLineRegexp = /:([0-9A-Fa-f]{8,})([0-9A-Fa-f]{2})(?:\r\n|\r|\n|)/g;
 
@@ -53,9 +51,10 @@ Number.isInteger = Number.isInteger || function(value) {
 /**
  * @class MemoryMap
  *
- * Represents a memory layout, with main focus into (possibly sparse) blocks of data.
+ * Represents the contents of a memory layout, with main focus into (possibly sparse) blocks of data.
  *<br/>
- * A MemoryMap acts as a subclass of {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map|<tt>Map</tt>}.
+ * A {@linkcode MemoryMap} acts as a subclass of
+ * {@linkcode https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map|Map}.
  * In every entry of it, the key is the starting address of a data block (an integer number),
  * and the value is the <tt>Uint8Array</tt> with the data for that block.
  *<br/>
@@ -63,14 +62,28 @@ Number.isInteger = Number.isInteger || function(value) {
  * data starting at memory address 0 (and it's the common case for simple .hex files),
  * but complex files with several non-contiguous data blocks are also possible, thus
  * the need for a data structure on top of the <tt>Uint8Array</tt>s.
+ *<br/>
+ * In order to parse <tt>.hex</tt> files, use the {@linkcode MemoryMap.fromHex} <em>static</em> factory
+ * method. In order to write <tt>.hex</tt> files, create a new {@linkcode MemoryMap} and call
+ * its {@linkcode MemoryMap.asHexString} method.
+ *
+ * @extends Map
+ * @example
+ * import MemoryMap from 'nrf-intel-hex';
+ *
+ * let memMap1 = new MemoryMap();
+ * let memMap2 = new MemoryMap([[0, new Uint8Array(1,2,3,4)]]);
+ * let memMap3 = new MemoryMap({0: new Uint8Array(1,2,3,4)});
+ * let memMap4 = new MemoryMap({0xCF0: new Uint8Array(1,2,3,4)});
  */
-
-export default class MemoryMap {
-    constructor(blocks, namedAddresses = []) {
-        // TODO: Add type assertions: should be able to only add numeric keys and
-        // Uint8Array values.
-//         super(blocks);
-
+class MemoryMap {
+    /**
+     * @param {Iterable} blocks The initial value for the memory blocks inside this
+     * <tt>MemoryMap</tt>. All keys must be numeric, and all values must be instances of
+     * <tt>Uint8Array</tt>. Optionally it can also be a plain <tt>Object</tt> with
+     * only numeric keys.
+     */
+    constructor(blocks) {
         this._blocks = new Map();
 
         if (blocks && typeof blocks[Symbol.iterator] === 'function') {
@@ -92,11 +105,8 @@ export default class MemoryMap {
         } else if (blocks !== undefined && blocks !== null) {
             throw new Error('First parameter to MemoryMap constructor must be an iterable of [addr, bytes] or undefined');
         }
-
-        this.namedAddresses = new Map(namedAddresses);
     }
 
-    // Delegate the following to the 'this._blocks' Map:
     set(addr, value) {
         if (!Number.isInteger(addr)) {
             throw new Error('Address passed to MemoryMap is not an integer');
@@ -109,6 +119,7 @@ export default class MemoryMap {
         }
         return this._blocks.set(addr, value);
     }
+    // Delegate the following to the 'this._blocks' Map:
     get(addr)    { return this._blocks.get(addr);    }
     clear()      { return this._blocks.clear();      }
     delete(addr) { return this._blocks.delete(addr); }
@@ -123,10 +134,10 @@ export default class MemoryMap {
 
     /**
      * Parses a string containing data formatted in "Intel HEX" format, and
-     * returns an instance of MemoryMap.
+     * returns an instance of {@linkcode MemoryMap}.
      *<br/>
-     * The insertion order of keys in the <tt>Map</tt> is guaranteed to be strictly
-     * ascending. In other words, when iterating through the <tt>Map</tt>, the addresses
+     * The insertion order of keys in the {@linkcode MemoryMap} is guaranteed to be strictly
+     * ascending. In other words, when iterating through the {@linkcode MemoryMap}, the addresses
      * will be ordered in ascending order.
      *<br/>
      * The parser has an opinionated behaviour, and will throw a descriptive error if it
@@ -139,7 +150,7 @@ export default class MemoryMap {
      * @param {String} hexText The contents of a .hex file.
      * @param {Number} [maxBlockSize=Infinity] Maximum size of the returned <tt>Uint8Array</tt>s.
      *
-     * @return {Map.Uint8Array}
+     * @return {MemoryMap}
      *
      * @example
      * import MemoryMap from 'nrf-intel-hex';
@@ -148,9 +159,9 @@ export default class MemoryMap {
      *     ":100000000102030405060708090A0B0C0D0E0F1068\n" +
      *     ":00000001FF";
      *
-     * let byteArrays = MemoryMap.fromHex(intelHexString);
+     * let memMap = MemoryMap.fromHex(intelHexString);
      *
-     * for (let [address, dataBlock] of byteArrays) {
+     * for (let [address, dataBlock] of memMap) {
      *     console.log('Data block at ', address, ', bytes: ', dataBlock);
      * }
      */
@@ -277,22 +288,25 @@ export default class MemoryMap {
 
 
     /**
-     * Returns a *new* instance of MemoryMap, containing the same data, but
-     * concatenating together those memory blocks that are adjacent.
+     * Returns a <strong>new</strong> instance of {@linkcode MemoryMap}, containing
+     * the same data, but concatenating together those memory blocks that are adjacent.
      *<br/>
-     * The insertion order of keys in the <tt>Map</tt> is guaranteed to be strictly
-     * ascending. In other words, when iterating through the <tt>Map</tt>, the addresses
+     * The insertion order of keys in the {@linkcode MemoryMap} is guaranteed to be strictly
+     * ascending. In other words, when iterating through the {@linkcode MemoryMap}, the addresses
      * will be ordered in ascending order.
      *<br/>
      * If <tt>maxBlockSize</tt> is given, blocks will be concatenated together only
      * until the joined block reaches this size in bytes. This means that the output
-     * <tt>Map</tt> might have more entries than the input one.
+     * {@linkcode MemoryMap} might have more entries than the input one.
      *<br/>
      * If there is any overlap between blocks, an error will be thrown.
+     *<br/>
+     * The returned {@linkcode MemoryMap} will use newly allocated memory.
      *
-     * @param {Number} [maxBlockSize=Infinity] Maximum size of the returned <tt>Uint8Array</tt>s.
+     * @param {Number} [maxBlockSize=Infinity] Maximum size of the <tt>Uint8Array</tt>s in the
+     * returned {@linkcode MemoryMap}.
      *
-     * @return {Map.Uint8Array} The joined memory blocks
+     * @return {MemoryMap}
      */
     join(maxBlockSize = Infinity) {
 
@@ -340,11 +354,11 @@ export default class MemoryMap {
 
     /**
      * Given a {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map|<tt>Map</tt>}
-     * of {MemoryMap}s, indexed by a alphanumeric ID,
+     * of {@linkcode MemoryMap}s, indexed by a alphanumeric ID,
      * returns a <tt>Map</tt> of address to tuples (<tt>Arrays</tt>s of length 2) of the form
      * <tt>(id, Uint8Array)</tt>s.
      *<br/>
-     * The scenario for using this is having several {MemoryMap}s, from several calls to
+     * The scenario for using this is having several {@linkcode MemoryMap}s, from several calls to
      * {@link module:nrf-intel-hex~hexToArrays|hexToArrays}, each having a different identifier.
      * This function locates where those memory block sets overlap, and returns a <tt>Map</tt>
      * containing addresses as keys, and arrays as values. Each array will contain 1 or more
@@ -354,7 +368,7 @@ export default class MemoryMap {
      *<br/>
      * The <tt>Uint8Array</tt>s in the output are
      * {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/subarray|subarrays}
-     * of the input data.
+     * of the input data; new memory is <strong>not</strong> allocated for them.
      *<br/>
      * The insertion order of keys in the output <tt>Map</tt> is guaranteed to be strictly
      * ascending. In other words, when iterating through the <tt>Map</tt>, the addresses
@@ -364,14 +378,14 @@ export default class MemoryMap {
      * in the insertion order of the input <tt>Map</tt> of block sets.
      *<br/>
      *
-     * @param {Map.Map.Uint8Array} The input memory block sets
+     * @param {Map.MemoryMap} memoryMaps The input memory block sets
      *
      * @example
      * import { overlapBlockSets, hexToArrays } from 'nrf-intel-hex';
      *
-     * let blocks1 = hexToArrays( hexdata1 );
-     * let blocks2 = hexToArrays( hexdata2 );
-     * let blocks3 = hexToArrays( hexdata3 );
+     * let blocks1 = MemoryMap.fromHex( hexdata1 );
+     * let blocks2 = MemoryMap.fromHex( hexdata2 );
+     * let blocks3 = MemoryMap.fromHex( hexdata3 );
      *
      * let blockSets = new Map([
      *  ['blocks A', blocks1],
@@ -441,10 +455,9 @@ export default class MemoryMap {
 
 
     /**
-     * Given the output of the {@link module:nrf-intel-hex~overlapBlockSets|overlapBlockSets}
+     * Given the output of the {@linkcode MemoryMap.overlapMemoryMaps|overlapMemoryMaps}
      * (a <tt>Map</tt> of address to an <tt>Array</tt> of <tt>(id, Uint8Array)</tt> tuples),
-     * returns a {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map|<tt>Map</tt>}
-     * of address to {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array|<tt>Uint8Array</tt>}s.
+     * returns a {@linkcode MemoryMap}. This discards the IDs in the process.
      *<br/>
      * The output <tt>Map</tt> contains as many entries as the input one (using the same addresses
      * as keys), but the value for each entry will be the <tt>Uint8Array</tt> of the <b>last</b>
@@ -455,7 +468,7 @@ export default class MemoryMap {
      *<br/>
      *
      * @param {Map.Array<mixed,Uint8Array>} overlaps The (possibly overlapping) input memory blocks
-     * @return {Map.Uint8Array} The flattened memory blocks
+     * @return {MemoryMap} The flattened memory blocks
      */
     static flattenOverlaps(overlaps) {
         return new MemoryMap(
@@ -467,7 +480,7 @@ export default class MemoryMap {
 
 
     /**
-     * Returns a new instance of {MemoryMap}, where:
+     * Returns a new instance of {@linkcode MemoryMap}, where:
      *
      * <ul>
      *  <li>Each address is a multiple of <tt>pageSize</tt></li>
@@ -481,16 +494,16 @@ export default class MemoryMap {
      * The scenario is wanting to prepare pages of bytes for a write operation, where the write
      * operation affects a whole page/sector at once.
      *<br/>
-     * The insertion order of keys in the output <tt>Map</tt> is guaranteed to be strictly
-     * ascending. In other words, when iterating through the <tt>Map</tt>, the addresses
-     * will be ordered in ascending order.
+     * The insertion order of keys in the output {@linkcode MemoryMap} is guaranteed
+     * to be strictly ascending. In other words, when iterating through the
+     * {@linkcode MemoryMap}, the addresses will be ordered in ascending order.
      *<br/>
      * The <tt>Uint8Array</tt>s in the output will be newly allocated.
      *<br/>
      *
      * @param {Number} [pageSize=1024] The size of the output pages, in bytes
      * @param {Number} [pad=0xFF] The byte value to use for padding
-     * @return {Map.Uint8Array} The output page-sized memory blocks
+     * @return {MemoryMap}
      */
     paginate( pageSize=1024, pad=0xFF) {
         if (pageSize <= 0) {
@@ -540,7 +553,7 @@ export default class MemoryMap {
      *
      *<br/>
      * Behaviour is similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint32|<tt>DataView.prototype.getUint32</tt>},
-     * except that this operates over a {MemoryMap}s instead of
+     * except that this operates over a {@linkcode MemoryMap} instead of
      * over an <tt>ArrayBuffer</tt>, and that this may return <tt>undefined</tt> if
      * the address is not <em>entirely</em> contained within one of the <tt>Uint8Array</tt>s.
      *<br/>
@@ -548,7 +561,7 @@ export default class MemoryMap {
      * @param {Map.Uint8Array} blocks The input memory blocks
      * @param {Number} offset The memory offset to read the data
      * @param {Boolean} [littleEndian=false] Whether to fetch the 4 bytes as a little- or big-endian integer
-     * @return {Number} An unsigned 32-bit integer number
+     * @return {Number|undefined} An unsigned 32-bit integer number
      */
     getUint32(offset, littleEndian) {
         let keys = Array.from(this.keys());
@@ -735,5 +748,27 @@ export default class MemoryMap {
 
         return records.join('\n');
     }
+
+
+    /**
+     * Performs a deep copy of the current {@linkcode MemoryMap}, returning a new one
+     * with exactly the same contents, but allocating new memory for each of its
+     * <tt>Uint8Array</tt>s.
+     *
+     * @return {MemoryMap}
+     */
+    clone() {
+        let cloned = new MemoryMap();
+
+        for (var [addr, value] of this) {
+            cloned.set(addr, new Uint8Array(value));
+        }
+
+        return cloned;
+    }
+
 }
+
+
+export default MemoryMap;
 
