@@ -383,14 +383,14 @@ class MemoryMap {
      * @example
      * import { overlapBlockSets, hexToArrays } from 'nrf-intel-hex';
      *
-     * let blocks1 = MemoryMap.fromHex( hexdata1 );
-     * let blocks2 = MemoryMap.fromHex( hexdata2 );
-     * let blocks3 = MemoryMap.fromHex( hexdata3 );
+     * let memMap1 = MemoryMap.fromHex( hexdata1 );
+     * let memMap2 = MemoryMap.fromHex( hexdata2 );
+     * let memMap3 = MemoryMap.fromHex( hexdata3 );
      *
      * let blockSets = new Map([
-     *  ['blocks A', blocks1],
-     *  ['blocks B', blocks2],
-     *  ['blocks C', blocks3]
+     *  ['file A', blocks1],
+     *  ['file B', blocks2],
+     *  ['file C', blocks3]
      * ]);
      *
      * let overlappings = overlapBlockSets(blockSets);
@@ -400,7 +400,7 @@ class MemoryMap {
      *
      *     for (let [address, tuples] of overlappings) {
      *         let [id, bytes] = tuple;
-     *         // 'id' in this example is either 'blocks A', 'blocks B' or 'blocks C'
+     *         // 'id' in this example is either 'file A', 'file B' or 'file C'
      *     }
      * }
      * @return {Map.Array<mixed,Uint8Array>} The map of possibly overlapping memory blocks
@@ -558,7 +558,6 @@ class MemoryMap {
      * the address is not <em>entirely</em> contained within one of the <tt>Uint8Array</tt>s.
      *<br/>
      *
-     * @param {Map.Uint8Array} blocks The input memory blocks
      * @param {Number} offset The memory offset to read the data
      * @param {Boolean} [littleEndian=false] Whether to fetch the 4 bytes as a little- or big-endian integer
      * @return {Number|undefined} An unsigned 32-bit integer number

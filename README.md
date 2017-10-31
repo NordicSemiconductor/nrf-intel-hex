@@ -13,7 +13,7 @@ cannot offer support. This software is provided "as is".
 ## Demo
 
 If you have some .hex files around, and can copy-paste them, try the
-[interactive browser demo](https://nordicsemiconductor.github.io/nrf-intel-hex/demo.html).
+[interactive browser demo](https://nordicplayground.github.io/nrf-intel-hex/demo.html).
 
 ## Usage
 
@@ -54,7 +54,7 @@ let string = arraysToHex(blocks);
 The return value will be a string of text containing all the records.
 
 This module also provides some utility functions for handling `Map`s of `Uint8Array`s.
-Check the full API documentation at https://nordicsemiconductor.github.io/nrf-intel-hex/doc/
+Check the full API documentation at https://nordicplayground.github.io/nrf-intel-hex/doc/
 
 ## Motivation
 
