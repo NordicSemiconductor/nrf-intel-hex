@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>nrf-intel-hex</title>
 
-    <script>
-    // Hackish placeholder
-    var module = {exports: {}};
-    </script>
-    <script src="./intel-hex.js"></script>
+    <script src="./intel-hex.browser.js"></script>
 
 </head>
 <body>
@@ -157,7 +153,7 @@ function parse(){
     let result = document.getElementById('result');
 
     try {
-        blocks = module.exports.hexToArrays(document.getElementById('source-hex').value);
+        blocks = MemoryMap.fromHex(document.getElementById('source-hex').value);
     } catch(ex) {
         result.innerHTML = "<pre>" + ex + "</pre>";
         return;

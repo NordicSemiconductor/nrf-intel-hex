@@ -1,16 +1,25 @@
 {
   "name": "nrf-intel-hex",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "license": "BSD",
   "description": "Parser/writer for the Intel HEX format",
-  "main": "intel-hex.js",
+  "module": "intel-hex.js",
+  "main": "intel-hex.cjs.js",
+  "browser": "intel-hex.browser.js",
   "author": "Iván Sánchez Ortega <ivan@sanchezortega.es>",
   "scripts": {
-    "test": "jasmine",
+    "lint": "eslint intel-hex.js",
+    "lintfix": "eslint --fix intel-hex.js",
+    "test": "rollup -c rollup.config.js; jasmine",
+    "rollup": "rollup -c rollup.config.js",
     "docs": "jsdoc intel-hex.js -t node_modules/minami/ -d doc/"
   },
   "devDependencies": {
-    "jasmine": "^2.8.0"
+    "jasmine": "^2.8.0",
+    "jsdoc": "^3.5.5",
+    "minami": "^1.2.3",
+    "rollup": "^0.50.0",
+    "rollup-plugin-buble": "^0.16.0"
   },
   "keywords": [
     "intel",
@@ -21,5 +30,9 @@
   "engines": {
     "node": ">=6.0.0"
   },
-  "repository": "https://github.com/NordicSemiconductor/nrf-intel-hex.git"
+  "repository": "https://github.com/NordicSemiconductor/nrf-intel-hex.git",
+  "dependencies": {
+    "eslint": "^4.10.0",
+    "rollup-plugin-commonjs": "^8.2.5"
+  }
 }

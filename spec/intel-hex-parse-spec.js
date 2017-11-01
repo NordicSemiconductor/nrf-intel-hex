@@ -22,42 +22,128 @@ if (!String.prototype.padStart) {
 }
 
 
+// Overwrite the "MemoryMap" if running on Node.
+// When running on a browser, the "MemoryMap" global is already define thanks to the IIFE.
+if (typeof window === 'undefined') {
+    global.MemoryMap = require('../intel-hex.cjs');
+}
 
-describe("intel-hex parse/write", function() {
 
-    let intelHex = typeof window !== 'undefined' ?
-        module.exports : // When running specRunner on a browser
-        require('../intel-hex');    // When running on node
+describe("MemoryMap fromHex/asHex", function() {
 
-    describe("hexToArrays", function() {
+    describe("constructor", function() {
 
-            describe('File consistency', ()=>{
+        describe('Basic construction', ()=>{
+            it('Creates an empty map if constructor parameter is undefined', () => {
+                let memMap = new MemoryMap();
+                expect(memMap.size).toEqual(0);
+            });
+            it('Creates an empty map if constructor parameter is empty array', () => {
+                let memMap = new MemoryMap([]);
+                expect(memMap.size).toEqual(0);
+            });
+            it('Creates an empty map if constructor parameter is empty object', () => {
+                let memMap = new MemoryMap({});
+                expect(memMap.size).toEqual(0);
+            });
+            it('Creates an empty map if constructor parameter is empty Map', () => {
+                let memMap = new MemoryMap(new Map());
+                expect(memMap.size).toEqual(0);
+            });
+
+            it('Creates an size-one map if constructor parameter is size-one array', () => {
+                let memMap = new MemoryMap([[0, new Uint8Array([1,2,3,4])]]);
+                expect(memMap.size).toEqual(1);
+            });
+            it('Creates an size-one map if constructor parameter is a one-entry object', () => {
+                let memMap = new MemoryMap({0: new Uint8Array([1,2,3,4])});
+                expect(memMap.size).toEqual(1);
+            });
+            it('Creates an size-one map if constructor parameter is a one-entry Map', () => {
+                let memMap = new MemoryMap(new Map([[0, new Uint8Array([1,2,3,4])]]));
+                expect(memMap.size).toEqual(1);
+            });
+        });
+
+        describe('Input sanity', ()=>{
+            it('Throws exception on non-iterable (number) parameter to constructor', () => {
+                expect(()=>{
+                    let memMap = new MemoryMap(1234);
+                }).toThrow(new Error('First parameter to MemoryMap constructor must be an iterable of [addr, bytes] or undefined'));
+            });
+
+            it('Throws exception on non-iterable (boolean) parameter to constructor', () => {
+                expect(()=>{
+                    let memMap = new MemoryMap(true);
+                }).toThrow(new Error('First parameter to MemoryMap constructor must be an iterable of [addr, bytes] or undefined'));
+            });
+
+            it('Throws exception on Uint8Array parameter to constructor', () => {
+                expect(()=>{
+                    let memMap = new MemoryMap([1,2,3,4]);
+                }).toThrow(new Error('First parameter to MemoryMap constructor must be an iterable of [addr, bytes] or undefined'));
+            });
+
+            it('Throws exception on negative address', () => {
+                expect(()=>{
+                    let memMap = new MemoryMap([[-0x100, new Uint8Array([1,2,3,4])]]);
+                }).toThrow(new Error('Address passed to MemoryMap is negative'));
+
+                expect(()=>{
+                    let memMap = new MemoryMap({"-0x100": new Uint8Array([1,2,3,4])});
+                }).toThrow(new Error('Address passed to MemoryMap is negative'));
+            });
+
+            it('Throws exception on non-integer address', () => {
+                expect(()=>{
+                    let memMap = new MemoryMap([['foobar', new Uint8Array([1,2,3,4])]]);
+                }).toThrow(new Error('Address passed to MemoryMap is not an integer'));
+
+                expect(()=>{
+                    let memMap = new MemoryMap({foobar: new Uint8Array([1,2,3,4])});
+                }).toThrow(new Error('Address passed to MemoryMap is not an integer'));
+            });
+
+            it('Throws exception on non-Uint8Array value', () => {
+                expect(()=>{
+                    let memMap = new MemoryMap([[0, 'foobar']]);
+                }).toThrow(new Error('Bytes passed to MemoryMap are not an Uint8Array'));
+
+            });
+        });
+
+    });
+
+
+    describe("fromHex", function() {
+
+        describe('File consistency', ()=>{
             it('Throws exception on empty input', () => {
                 expect(()=>{
-                    intelHex.hexToArrays('');
+                    MemoryMap.fromHex('');
                 }).toThrow(new Error('Malformed .hex file, could not parse any registers'));
             });
 
             it('Returns an empty Map when passed only an EOF record', () => {
-                let blocks = intelHex.hexToArrays(':00000001FF');
+                let blocks = MemoryMap.fromHex(':00000001FF');
                 expect(blocks.size).toBe(0);
             });
 
             it('Throws exception on no records found', () => {
                 expect(()=>{
-                    intelHex.hexToArrays(':00000foobar001FF');
+                    MemoryMap.fromHex(':00000foobar001FF');
                 }).toThrow(new Error('Malformed .hex file, could not parse any registers'));
             });
 
             it('Throws exception on wrong-length EOF record', () => {
                 expect(()=>{
-                    intelHex.hexToArrays(':02000001FF');
+                    MemoryMap.fromHex(':02000001FF');
                 }).toThrow(new Error('Mismatched record length at record 1 (:02000001FF), expected 2 data bytes but actual length is 0'));
             });
 
             it('Throws exception on missing EOF record', () => {
                 expect(()=>{
-                    intelHex.hexToArrays(':100000000102030405060708090A0B0C0D0E0F1068\n');
+                    MemoryMap.fromHex(':100000000102030405060708090A0B0C0D0E0F1068\n');
                 }).toThrow(new Error('No EOF record at end of file'));
             });
         });
@@ -66,7 +152,7 @@ describe("intel-hex parse/write", function() {
 
             it('Throws exception on wrong-length data record', () => {
                 expect(()=>{
-                    intelHex.hexToArrays(
+                    MemoryMap.fromHex(
                         ':10000000010203040506070868\n' +
                         ':00000001FF');
                 }).toThrow(new Error('Mismatched record length at record 1 (:10000000010203040506070868), expected 16 data bytes but actual length is 8'));
@@ -74,34 +160,42 @@ describe("intel-hex parse/write", function() {
 
             it('Throws exception on wrong checksum of EOF', () => {
                 expect(()=>{
-                    intelHex.hexToArrays(':0000000188');
+                    MemoryMap.fromHex(':0000000188');
                 }).toThrow(new Error('Checksum failed at record 1 (:0000000188), should be ff'));
             });
 
             it('Throws exception on wrong checksum of data record', () => {
                 expect(()=>{
-                    intelHex.hexToArrays(
+                    MemoryMap.fromHex(
                         ':080000000102030405060708FF\n' +
                         ':00000001FF');
                 }).toThrow(new Error('Checksum failed at record 1 (:080000000102030405060708FF), should be d4'));
             });
 
             it('Returns an empty Map when passed an EOF record', () => {
-                let blocks = intelHex.hexToArrays(':00000001FF');
+                let blocks = MemoryMap.fromHex(':00000001FF');
                 expect(blocks.size).toBe(0);
             });
 
             it('Throws exception if there is data after an EOF record', () => {
                 expect(()=>{
-                    let blocks = intelHex.hexToArrays(
+                    let blocks = MemoryMap.fromHex(
                         ':00000001FF\n' +
                         ':100000000102030405060708090A0B0C0D0E0F1068\n');
                 }).toThrow(new Error('There is data after an EOF record at record 1'));
             });
+
+            it('Throws exception if record type is not between 0x00 and 0x05', () => {
+                expect(()=>{
+                    let blocks = MemoryMap.fromHex(
+                        ':00000008F8\n' + 
+                        ':00000001FF');
+                }).toThrow(new Error('Invalid record type 0x08 at record 1 (should be between 0x00 and 0x05)'));
+            });
         });
 
         it('Returns one block when passed a zero-offset data record', () => {
-            let blocks = intelHex.hexToArrays(
+            let blocks = MemoryMap.fromHex(
                 ':100000000102030405060708090A0B0C0D0E0F1068\n' +
                 ':00000001FF');
             expect(blocks.size).toBe(1);
@@ -114,7 +208,7 @@ describe("intel-hex parse/write", function() {
         });
 
         it('Returns one block when passed lowercase records', () => {
-            let blocks = intelHex.hexToArrays(
+            let blocks = MemoryMap.fromHex(
                 ':100000000102030405060708090a0b0c0d0e0f1068\n' +
                 ':00000001ff');
             expect(blocks.size).toBe(1);
@@ -127,7 +221,7 @@ describe("intel-hex parse/write", function() {
         });
 
         it('Silently ignores program-counter-reset records', () => {
-            let blocks = intelHex.hexToArrays(
+            let blocks = MemoryMap.fromHex(
                 ':040000050001C0C175\n' +
                 ':0400000512345678E3\n' +
                 ':100000000102030405060708090A0B0C0D0E0F1068\n' +
@@ -146,7 +240,7 @@ describe("intel-hex parse/write", function() {
 
         describe('Newline parsing', ()=>{
             it('Handles \\n', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':100000000102030405060708090A0B0C0D0E0F1068' +
                     '\n' +
                     ':00000001FF');
@@ -155,7 +249,7 @@ describe("intel-hex parse/write", function() {
             });
 
             it('Handles \\r', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':100000000102030405060708090A0B0C0D0E0F1068' +
                     '\r' +
                     ':00000001FF');
@@ -164,7 +258,7 @@ describe("intel-hex parse/write", function() {
             });
 
             it('Handles \\r\\n', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':100000000102030405060708090A0B0C0D0E0F1068' +
                     '\r\n' +
                     ':00000001FF');
@@ -173,7 +267,7 @@ describe("intel-hex parse/write", function() {
             });
 
             it('Handles data without newlines', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':100000000102030405060708090A0B0C0D0E0F1068' +
                     ':00000001FF');
                 expect(blocks.size).toBe(1);
@@ -182,7 +276,7 @@ describe("intel-hex parse/write", function() {
 
             it('Throws error on unknown record separator', () => {
                 expect(()=>{
-                    let blocks = intelHex.hexToArrays(
+                    let blocks = MemoryMap.fromHex(
                         ':100000000102030405060708090A0B0C0D0E0F1068' +
                         '|' +
                         ':00000001FF');
@@ -192,7 +286,7 @@ describe("intel-hex parse/write", function() {
 
         describe('Contiguous data', ()=>{
             it('Returns one block when passed a non-zero-offset data record', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':101234000102030405060708090A0B0C0D0E0F1022\n' +
                     ':00000001FF');
                 expect(blocks.size).toBe(1);
@@ -205,7 +299,7 @@ describe("intel-hex parse/write", function() {
             });
 
             it('Returns one block when passed a segment address and a non-zero-offset data record', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':020000021234B6\n' +
                     ':100056000102030405060708090A0B0C0D0E0F1012\n' +
                     ':00000001FF');
@@ -222,7 +316,7 @@ describe("intel-hex parse/write", function() {
             });
 
             it('Returns one block when passed a linear address and a non-zero-offset data record', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':020000041234B4\n' +
                     ':105678000102030405060708090A0B0C0D0E0F109A\n' +
                     ':00000001FF');
@@ -239,7 +333,7 @@ describe("intel-hex parse/write", function() {
             });
 
             it('Only the last linear address record has effect', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':0200000456782C\n' +
                     ':020000040000FA\n' +
                     ':101234000102030405060708090A0B0C0D0E0F1022\n' +
@@ -253,7 +347,7 @@ describe("intel-hex parse/write", function() {
             });
 
             it('Return one block when passed 8 consecutive records', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':020000040001F9\n' +
                     ':10C00000C039002049C1010063C1010065C10100C0\n' +
                     ':10C010000000000000000000000000000000000020\n' +
@@ -273,7 +367,7 @@ describe("intel-hex parse/write", function() {
 
         describe('Sparse data', ()=>{
             it('Returns two blocks when passed two sparse data records', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':100000000102030405060708090A0B0C0D0E0F1068\n' +
                     ':020000041234B4\n' +
                     ':100000001112131415161718191A1B1C1D1E1F2068\n' +
@@ -292,7 +386,7 @@ describe("intel-hex parse/write", function() {
             });
 
             it('Returns one contiguous block when passed two contiguous data records', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':100000000102030405060708090A0B0C0D0E0F1068\n' +
                     ':100010001112131415161718191A1B1C1D1E1F2058\n' +
                     ':00000001FF');
@@ -306,7 +400,7 @@ describe("intel-hex parse/write", function() {
             });
 
             it('Returns one contiguous block when passed two out-of-order contiguous data records', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':100010001112131415161718191A1B1C1D1E1F2058\n' +
                     ':100000000102030405060708090A0B0C0D0E0F1068\n' +
                     ':00000001FF');
@@ -321,7 +415,7 @@ describe("intel-hex parse/write", function() {
 
             it('Throws exception on duplicated data records', () => {
                 expect(()=>{
-                    let blocks = intelHex.hexToArrays(
+                    let blocks = MemoryMap.fromHex(
                         ':100000000102030405060708090A0B0C0D0E0F1068\n' +
                         ':100000000102030405060708090A0B0C0D0E0F1068\n' +
                         ':00000001FF\n');
@@ -330,7 +424,7 @@ describe("intel-hex parse/write", function() {
 
             it('Throws exception on overlapping data records', () => {
                 expect(()=>{
-                    let blocks = intelHex.hexToArrays(
+                    let blocks = MemoryMap.fromHex(
                         ':100000000102030405060708090A0B0C0D0E0F1068\n' +
                         ':100008000102030405060708090A0B0C0D0E0F1060\n' +
                         ':00000001FF\n');
@@ -338,7 +432,7 @@ describe("intel-hex parse/write", function() {
             });
 
             it('Returned Map\'s insertion order is strictly ascending', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':101000000102030405060708090A0B0C0D0E0F1058\n' +
                     ':105000000102030405060708090A0B0C0D0E0F1018\n' +
                     ':103000000102030405060708090A0B0C0D0E0F1038\n' +
@@ -352,7 +446,7 @@ describe("intel-hex parse/write", function() {
             });
 
             it('Returns two contiguous blocks when using maxBlockSize', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':100010001112131415161718191A1B1C1D1E1F2058\n' +
                     ':100000000102030405060708090A0B0C0D0E0F1068\n' +
                     ':00000001FF', 16);
@@ -366,28 +460,28 @@ describe("intel-hex parse/write", function() {
         describe('Record wrapping', ()=>{
             it('Throws exception if record wraps over 0xFFFF, 2 bytes', () => {
                 expect(()=>{
-                    let blocks = intelHex.hexToArrays(
+                    let blocks = MemoryMap.fromHex(
                         ':02FFFF000102FD\n' +
                         ':00000001FF');
                 }).toThrow(new Error('Data at record 1 (:02FFFF000102FD) wraps over 0xFFFF. This would trigger ambiguous behaviour. Please restructure your data so that for every record the data offset plus the data length do not exceed 0xFFFF.'));
             });
             it('Throws exception if record wraps over 0xFFFF, 16 bytes', () => {
                 expect(()=>{
-                    let blocks = intelHex.hexToArrays(
+                    let blocks = MemoryMap.fromHex(
                         ':10FFF8000102030405060708090A0B0C0D0E0F1071\n' +
                         ':00000001FF');
                 }).toThrow(new Error('Data at record 1 (:10FFF8000102030405060708090A0B0C0D0E0F1071) wraps over 0xFFFF. This would trigger ambiguous behaviour. Please restructure your data so that for every record the data offset plus the data length do not exceed 0xFFFF.'));
             });
 
             it('Does not throw if record ends at exactly 0xFFFF, 1 byte', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':01FFFF000100\n' +
                     ':00000001FF');
                 expect(blocks.size).toBe(1);
                 expect(blocks.get(0xFFFF).length).toBe(1);
             });
             it('Does not throw if record ends at exactly 0xFFFF, 16 bytes', () => {
-                let blocks = intelHex.hexToArrays(
+                let blocks = MemoryMap.fromHex(
                     ':10FFF0000102030405060708090A0B0C0D0E0F1079\n' +
                     ':00000001FF');
                 expect(blocks.size).toBe(1);
@@ -396,48 +490,29 @@ describe("intel-hex parse/write", function() {
         });
     });
 
-    describe("arraysToHex", function() {
+    describe("asHexString", function() {
 
         it('Outputs EOF on empty input', () => {
-            let str = intelHex.arraysToHex(new Map());
+            let memMap = new MemoryMap();
+            let str = memMap.asHexString();
             expect(str).toBe(':00000001FF');
-        });
-
-        describe("Input sanity", function() {
-            it('Outputs EOF on empty input, using a plain object instead of a Map', () => {
-                let str = intelHex.arraysToHex({});
-                expect(str).toBe(':00000001FF');
-            });
-            it('Throws error when passing a plain Uint8Array', () => {
-                expect(()=>{
-                    intelHex.arraysToHex(new Uint8Array([1,2,3,4]));
-                }).toThrow(new Error('Input of arraysToHex is neither a Map nor a plain Object'));
-            });
-            it('Throws error when passing a block with negative offset', () => {
-                expect(()=>{
-                    intelHex.arraysToHex(new Uint8Array([1,2,3,4]));
-                }).toThrow(new Error('Input of arraysToHex is neither a Map nor a plain Object'));
-            });
-            it('Throws error when a block is not an Uint8Array', () => {
-                expect(()=>{
-                    intelHex.arraysToHex(new Map([[0, 'foobar']]));
-                }).toThrow(new Error('Block at offset 0 is not an Uint8Array'));
-            });
         });
 
         describe("Basic output", function() {
             it('Outputs one offset record plus one data record on one byte', () => {
                 let bytes = (new Uint8Array([1]));
-                let str = intelHex.arraysToHex(new Map([[0, bytes]]));
+                let memMap = new MemoryMap([[0, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
                     ':0100000001FE\n' +
                     ':00000001FF');
             });
-            it('Outputs one offset record plus one data record on one byte, map-less input syntax', () => {
+            it('Outputs one offset record plus one data record on one byte, object input syntax', () => {
                 let bytes = (new Uint8Array([1]));
-                let str = intelHex.arraysToHex({0: bytes});
+                let memMap = new MemoryMap({0: bytes});
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -446,7 +521,8 @@ describe("intel-hex parse/write", function() {
             });
             it('Outputs one offset record plus one data record on 16 bytes', () => {
                 let bytes = (new Uint8Array(16)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0, bytes]]));
+                let memMap = new MemoryMap([[0, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -455,7 +531,8 @@ describe("intel-hex parse/write", function() {
             });
             it('Outputs one offset record plus two data records on 17 bytes', () => {
                 let bytes = (new Uint8Array(17)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0, bytes]]));
+                let memMap = new MemoryMap([[0, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -465,7 +542,8 @@ describe("intel-hex parse/write", function() {
             });
             it('Outputs one offset record plus two data records on 32 bytes', () => {
                 let bytes = (new Uint8Array(32)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0, bytes]]));
+                let memMap = new MemoryMap([[0, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -475,7 +553,8 @@ describe("intel-hex parse/write", function() {
             });
             it('Outputs one offset record plus three data records on 33 bytes', () => {
                 let bytes = (new Uint8Array(33)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0, bytes]]));
+                let memMap = new MemoryMap([[0, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -486,7 +565,8 @@ describe("intel-hex parse/write", function() {
             });
             it('Outputs one offset record plus three data records on 48 bytes', () => {
                 let bytes = (new Uint8Array(48)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0, bytes]]));
+                let memMap = new MemoryMap([[0, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -497,7 +577,8 @@ describe("intel-hex parse/write", function() {
             });
             it('Outputs one offset record plus 16 data records on 256 bytes', () => {
                 let bytes = (new Uint8Array(256)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0, bytes]]));
+                let memMap = new MemoryMap([[0, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -522,15 +603,26 @@ describe("intel-hex parse/write", function() {
         });
 
         describe("Custom record length", function() {
-            it('Throws error when passing a negative record value', () => {
+            it('Throws error when passing a negative record size', () => {
                 expect(()=>{
-                    intelHex.arraysToHex(new Uint8Array([1,2,3,4]), -5);
+                    let bytes = (new Uint8Array(2)).map((i,j)=>j);
+                    let memMap = new MemoryMap([[0, bytes]]);
+                    let str = memMap.asHexString(-8);
                 }).toThrow(new Error('Size of record must be greater than zero'));
+            });
+
+            it('Throws error when passing a too large record size', () => {
+                expect(()=>{
+                    let bytes = (new Uint8Array(2)).map((i,j)=>j);
+                    let memMap = new MemoryMap([[0, bytes]]);
+                    let str = memMap.asHexString(1024);
+                }).toThrow(new Error('Size of record must be less than 256'));
             });
 
             it('Outputs two one-byte data records on 2 bytes', () => {
                 let bytes = (new Uint8Array(2)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0, bytes]]), 1);
+                let memMap = new MemoryMap([[0, bytes]]);
+                let str = memMap.asHexString(1);
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -540,7 +632,8 @@ describe("intel-hex parse/write", function() {
             });
             it('Outputs four four-byte data records on 16 bytes', () => {
                 let bytes = (new Uint8Array(16)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0, bytes]]), 4);
+                let memMap = new MemoryMap([[0, bytes]]);
+                let str = memMap.asHexString(4);
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -555,7 +648,8 @@ describe("intel-hex parse/write", function() {
         describe("Offset output", function() {
             it('Outputs one 16-byte record starting at 0x00009876', () => {
                 let bytes = (new Uint8Array(16)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0x9876, bytes]]));
+                let memMap = new MemoryMap([[0x9876, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -565,7 +659,8 @@ describe("intel-hex parse/write", function() {
 
             it('Outputs one 16-byte record starting at 0x98765432', () => {
                 let bytes = (new Uint8Array(16)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0x98765432, bytes]]));
+                let memMap = new MemoryMap([[0x98765432, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000049876EC\n' +
@@ -576,14 +671,16 @@ describe("intel-hex parse/write", function() {
             it('Throws error if data address is over 0xFFFFFFFF', () => {
                 let bytes = (new Uint8Array(2));
                 expect(()=>{
-                    let str = intelHex.arraysToHex(new Map([[0xFFFFFFFF, bytes]]));
+                    let memMap = new MemoryMap([[0xFFFFFFFF, bytes]]);
+                let str = memMap.asHexString();
                 }).toThrow(new Error('Data cannot be over 0xFFFFFFFF'));
 
             });
 
             it('Outputs one offset record plus 16 data records on 256 bytes at 0x00009876', () => {
                 let bytes = (new Uint8Array(256)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0x9876, bytes]]));
+                let memMap = new MemoryMap([[0x9876, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -608,7 +705,8 @@ describe("intel-hex parse/write", function() {
 
             it('Outputs two 1-byte records starting at 0x0000FFFF from 2 bytes, including extra offset record', () => {
                 let bytes = (new Uint8Array(2)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0xFFFF, bytes]]));
+                let memMap = new MemoryMap([[0xFFFF, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -620,7 +718,8 @@ describe("intel-hex parse/write", function() {
 
             it('Outputs two 8-byte records starting at 0x0000FFF8 from 16 bytes, including extra offset record', () => {
                 let bytes = (new Uint8Array(16)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0xFFF8, bytes]]));
+                let memMap = new MemoryMap([[0xFFF8, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -632,7 +731,8 @@ describe("intel-hex parse/write", function() {
 
             it('Splits custom-sized records at 0x0000FFF9', () => {
                 let bytes = (new Uint8Array(15)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0xFFF9, bytes]]), 5);
+                let memMap = new MemoryMap([[0xFFF9, bytes]]);
+                let str = memMap.asHexString(5);
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -646,7 +746,8 @@ describe("intel-hex parse/write", function() {
 
             it('Outputs two 1-byte records starting at 0x9876FFFF from 2 bytes, including extra offset record', () => {
                 let bytes = (new Uint8Array(2)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0xFFFF, bytes]]));
+                let memMap = new MemoryMap([[0xFFFF, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -658,7 +759,8 @@ describe("intel-hex parse/write", function() {
 
             it('Outputs two 8-byte records starting at 0x9876FFF8 from 16 bytes, including extra offset record', () => {
                 let bytes = (new Uint8Array(16)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0xFFF8, bytes]]));
+                let memMap = new MemoryMap([[0xFFF8, bytes]]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -670,7 +772,8 @@ describe("intel-hex parse/write", function() {
 
             it('Splits custom-sized records at 0x9876FFF9', () => {
                 let bytes = (new Uint8Array(15)).map((i,j)=>j);
-                let str = intelHex.arraysToHex(new Map([[0xFFF9, bytes]]), 5);
+                let memMap = new MemoryMap([[0xFFF9, bytes]]);
+                let str = memMap.asHexString(5);
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -688,10 +791,11 @@ describe("intel-hex parse/write", function() {
             it('Outputs two records for 2 consecutive blocks', () => {
                 let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
                 let bytes2 = (new Uint8Array(16)).map((i,j)=>j+16);
-                let str = intelHex.arraysToHex(new Map([
+                let memMap = new MemoryMap([
                     [0x00, bytes1],
                     [0x10, bytes2]
-                ]));
+                ]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -703,10 +807,11 @@ describe("intel-hex parse/write", function() {
             it('Outputs no extra offset records for 2 consecutive blocks in the same segment', () => {
                 let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
                 let bytes2 = (new Uint8Array(16)).map((i,j)=>j+16);
-                let str = intelHex.arraysToHex(new Map([
+                let memMap = new MemoryMap([
                     [0x0000, bytes1],
                     [0x0800, bytes2]
-                ]));
+                ]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -718,10 +823,11 @@ describe("intel-hex parse/write", function() {
             it('Outputs extra offset records for 2 consecutive key-value pairs in the same segment', () => {
                 let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
                 let bytes2 = (new Uint8Array(16)).map((i,j)=>j+16);
-                let str = intelHex.arraysToHex(new Map([
+                let memMap = new MemoryMap([
                     [0x000000, bytes1],
                     [0x050010, bytes2]
-                ]));
+                ]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -736,12 +842,13 @@ describe("intel-hex parse/write", function() {
                 let bytes2 = (new Uint8Array(16)).map((i,j)=>j+16);
                 let bytes3 = (new Uint8Array(16)).map((i,j)=>j+32);
                 let bytes4 = (new Uint8Array(16)).map((i,j)=>j+48);
-                let str = intelHex.arraysToHex(new Map([
+                let memMap = new MemoryMap([
                     [0x000000, bytes1],
                     [0x000800, bytes2],
                     [0x050010, bytes3],
                     [0x050C30, bytes4]
-                ]));
+                ]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -758,12 +865,13 @@ describe("intel-hex parse/write", function() {
                 let bytes2 = (new Uint8Array(16)).map((i,j)=>j+16);
                 let bytes3 = (new Uint8Array(16)).map((i,j)=>j+32);
                 let bytes4 = (new Uint8Array(16)).map((i,j)=>j+48);
-                let str = intelHex.arraysToHex(new Map([
+                let memMap = new MemoryMap([
                     [0x050010, bytes3],
                     [0x000000, bytes1],
                     [0x050C30, bytes4],
                     [0x000800, bytes2]
-                ]));
+                ]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -780,7 +888,7 @@ describe("intel-hex parse/write", function() {
                 let bytes2 = (new Uint8Array(16)).map((i,j)=>j+16);
                 let bytes3 = (new Uint8Array(16)).map((i,j)=>j+32);
                 let bytes4 = (new Uint8Array(16)).map((i,j)=>j+48);
-                let str = intelHex.arraysToHex(new Map([
+                let memMap = new MemoryMap([
                     [0x050010, bytes3],
                     [0x050020, new Uint8Array(0)],
                     [0x000000, bytes1],
@@ -791,7 +899,8 @@ describe("intel-hex parse/write", function() {
                     [0x050C30, bytes4],
                     [0x050D30, new Uint8Array(0)],
                     [0x000800, bytes2]
-                ]));
+                ]);
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -803,12 +912,12 @@ describe("intel-hex parse/write", function() {
                     ':00000001FF');
             });
 
-            it('Ignores empty blocks, map-less input syntax', () => {
+            it('Ignores empty blocks, object input syntax', () => {
                 let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
                 let bytes2 = (new Uint8Array(16)).map((i,j)=>j+16);
                 let bytes3 = (new Uint8Array(16)).map((i,j)=>j+32);
                 let bytes4 = (new Uint8Array(16)).map((i,j)=>j+48);
-                let str = intelHex.arraysToHex({
+                let memMap = new MemoryMap({
                     0x050010: bytes3,
                     0x050020: new Uint8Array(0),
                     0x000000: bytes1,
@@ -820,6 +929,7 @@ describe("intel-hex parse/write", function() {
                     0x050D30: new Uint8Array(0),
                     0x000800: bytes2
                 });
+                let str = memMap.asHexString();
 
                 expect(str).toBe(
                     ':020000040000FA\n' +
@@ -835,17 +945,18 @@ describe("intel-hex parse/write", function() {
                 let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
                 let bytes2 = (new Uint8Array(16)).map((i,j)=>j+16);
                 expect(()=>{
-                    intelHex.arraysToHex(new Map([
+                    let memMap = new MemoryMap([
                         [0x000000, bytes1],
                         [0x000008, bytes2]
-                    ]));
+                    ]);
+                    let str = memMap.asHexString();
                 }).toThrow(new Error('Block starting at 0x8 overlaps with a previous block.'));
 
             });
         });
     });
 
-    describe("hexToArrays+arraysToHex idempotence", function() {
+    describe("fromHex+asHexString idempotence", function() {
         it('8 consecutive 16-byte records', () => {
             let str = ':020000040001F9\n' +
                 ':10C00000C039002049C1010063C1010065C10100C0\n' +
@@ -858,29 +969,146 @@ describe("intel-hex parse/write", function() {
                 ':10C070006DC101006DC101006DC101006DC1010004\n' +
                 ':00000001FF';
 
-            expect(intelHex.arraysToHex(intelHex.hexToArrays(str))).toBe(str);
+            expect(MemoryMap.fromHex(str).asHexString()).toBe(str);
+
+//             expect(intelHex.arraysToHex(MemoryMap.fromHex(str))).toBe(str);
         });
     });
 
-    describe("arraysToHex+hexToArrays idempotence", function() {
+    describe("asHexString+fromHex idempotence", function() {
         it('keeps 256B', () => {
             let bytes = (new Uint8Array(0x100)).map((i,j)=>j);
-            let blocks = new Map([[0, bytes]]);
+            let blocks = new MemoryMap([[0, bytes]]);
 
-            expect(intelHex.hexToArrays(intelHex.arraysToHex(blocks))).toEqual(blocks);
+            expect(MemoryMap.fromHex(blocks.asHexString())).toEqual(blocks);
         });
         it('keeps 64KiB', () => {
             let bytes = (new Uint8Array(0x10000)).map((i,j)=>j);
-            let blocks = new Map([[0, bytes]]);
+            let blocks = new MemoryMap([[0, bytes]]);
 
-            expect(intelHex.hexToArrays(intelHex.arraysToHex(blocks))).toEqual(blocks);
+            expect(MemoryMap.fromHex(blocks.asHexString())).toEqual(blocks);
         });
-        it('keeps 1MiB', () => {
-            let bytes = (new Uint8Array(0x100000)).map((i,j)=>j);
-            let blocks = new Map([[0, bytes]]);
+        it('keeps 256KiB', () => {
+            let bytes = (new Uint8Array(0x40000)).map((i,j)=>j);
+            let blocks = new MemoryMap([[0, bytes]]);
 
-            expect(intelHex.hexToArrays(intelHex.arraysToHex(blocks))).toEqual(blocks);
+            expect(MemoryMap.fromHex(blocks.asHexString())).toEqual(blocks);
         });
     });
 
+    describe("fromPaddedUint8Array", function() {
+        it('Throws error on non-Uint8Array input', () => {
+            expect(()=>{
+                let memMap = MemoryMap.fromPaddedUint8Array(true);
+            }).toThrow(new Error('Bytes passed to fromPaddedUint8Array are not an Uint8Array'));
+
+            expect(()=>{
+                let memMap = MemoryMap.fromPaddedUint8Array('foobar');
+            }).toThrow(new Error('Bytes passed to fromPaddedUint8Array are not an Uint8Array'));
+
+            expect(()=>{
+                let memMap = MemoryMap.fromPaddedUint8Array([1,2,3,4]);
+            }).toThrow(new Error('Bytes passed to fromPaddedUint8Array are not an Uint8Array'));
+        });
+
+        it('Handles 0-byte input', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array());
+
+            expect(memMap).toEqual(new MemoryMap());
+        });
+
+        it('Handles 1-byte non-pad input', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array([0x80]));
+
+            expect(memMap).toEqual(new MemoryMap([[0, new Uint8Array([0x80])]]));
+        });
+
+        it('Handles 1-byte pad input', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array([0xFF]), 0xFF, 1);
+
+            expect(memMap).toEqual(new MemoryMap());
+        });
+
+        it('Handles 2-byte pad + non-pad input', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array([0xFF, 0x80]), 0xFF, 1);
+
+            expect(memMap).toEqual(new MemoryMap([[1, new Uint8Array([0x80])]]));
+        });
+        it('Handles 2-byte non-pad + pad input', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array([0x80, 0xFF]), 0xFF, 1);
+
+            expect(memMap).toEqual(new MemoryMap([[0, new Uint8Array([0x80])]]));
+        });
+
+        it('Handles 2-byte pad + non-pad input, non-standard pad byte', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array([0xFF, 0x80]), 0x80, 1);
+
+            expect(memMap).toEqual(new MemoryMap([[0, new Uint8Array([0xFF])]]));
+        });
+        it('Handles 2-byte non-pad + pad input, non-standard pad byte', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array([0x80, 0xFF]), 0x80, 1);
+
+            expect(memMap).toEqual(new MemoryMap([[1, new Uint8Array([0xFF])]]));
+        });
+
+        it('Skips only N=2 or more consecutive pad bytes, 1', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array(
+                [0x01, 0x02, 0x03, 0xFF, 0x04, 0x05, 0xFF, 0xFF, 0x06, 0x07, 0xFF]
+            ), 0xFF, 2);
+
+            expect(memMap).toEqual(new MemoryMap([
+                [0, new Uint8Array([0x01, 0x02, 0x03, 0xFF, 0x04, 0x05])],
+                [8, new Uint8Array([0x06, 0x07, 0xFF])]
+            ]));
+        });
+
+        it('Skips only N=2 or more consecutive pad bytes, 2', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array(
+                [0xFF, 0x01, 0x02, 0x03, 0xFF, 0xFF, 0x04, 0x05, 0xFF, 0x06, 0x07, 0xFF, 0xFF]
+            ), 0xFF, 2);
+
+            expect(memMap).toEqual(new MemoryMap([
+                [0, new Uint8Array([0xFF, 0x01, 0x02, 0x03])],
+                [6, new Uint8Array([0x04, 0x05, 0xFF, 0x06, 0x07])]
+            ]));
+        });
+
+        it('Skips only N=2 or more consecutive pad bytes, 3', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array(
+                [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x02, 0x03, 0xFF, 0x04, 0x05, 0xFF, 0x06, 0x07, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
+            ), 0xFF, 2);
+
+            expect(memMap).toEqual(new MemoryMap([
+                [5, new Uint8Array([0x01, 0x02, 0x03, 0xFF, 0x04, 0x05, 0xFF, 0x06, 0x07])]
+            ]));
+        });
+
+        it('Skips only N=4 or more consecutive pad bytes, 1', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array(
+                [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x02, 0x03, 0xFF, 0x04, 0x05, 0xFF, 0x06, 0x07, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
+            ), 0xFF, 4);
+
+            expect(memMap).toEqual(new MemoryMap([
+                [5, new Uint8Array([0x01, 0x02, 0x03, 0xFF, 0x04, 0x05, 0xFF, 0x06, 0x07])]
+            ]));
+        });
+
+        it('Skips only N=4 or more consecutive pad bytes, 2', () => {
+            let memMap = MemoryMap.fromPaddedUint8Array(new Uint8Array(
+                [0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                 0x01, 0x02, 0x03,
+                 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                 0x04, 0xFF, 0xFF, 0xFF, 0x05,
+                 0xFF, 0xFF, 0xFF, 0xFF,
+                 0x06, 0x07,
+                 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
+            ), 0xFF, 4);
+
+            expect(memMap).toEqual(new MemoryMap([
+                [ 5, new Uint8Array([0x01, 0x02, 0x03])],
+                [14, new Uint8Array([0x04, 0xFF, 0xFF, 0xFF, 0x05])],
+                [23, new Uint8Array([0x06, 0x07])],
+            ]));
+        });
+    });
 });
