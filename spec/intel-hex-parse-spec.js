@@ -184,6 +184,14 @@ describe("MemoryMap fromHex/asHex", function() {
                         ':100000000102030405060708090A0B0C0D0E0F1068\n');
                 }).toThrow(new Error('There is data after an EOF record at record 1'));
             });
+
+            it('Throws exception if record type is not between 0x00 and 0x05', () => {
+                expect(()=>{
+                    let blocks = MemoryMap.fromHex(
+                        ':00000008F8\n' + 
+                        ':00000001FF');
+                }).toThrow(new Error('Invalid record type 0x08 at record 1 (should be between 0x00 and 0x05)'));
+            });
         });
 
         it('Returns one block when passed a zero-offset data record', () => {
@@ -595,12 +603,20 @@ describe("MemoryMap fromHex/asHex", function() {
         });
 
         describe("Custom record length", function() {
-            it('Throws error when passing a negative record value', () => {
+            it('Throws error when passing a negative record size', () => {
                 expect(()=>{
                     let bytes = (new Uint8Array(2)).map((i,j)=>j);
                     let memMap = new MemoryMap([[0, bytes]]);
                     let str = memMap.asHexString(-8);
                 }).toThrow(new Error('Size of record must be greater than zero'));
+            });
+
+            it('Throws error when passing a too large record size', () => {
+                expect(()=>{
+                    let bytes = (new Uint8Array(2)).map((i,j)=>j);
+                    let memMap = new MemoryMap([[0, bytes]]);
+                    let str = memMap.asHexString(1024);
+                }).toThrow(new Error('Size of record must be less than 256'));
             });
 
             it('Outputs two one-byte data records on 2 bytes', () => {

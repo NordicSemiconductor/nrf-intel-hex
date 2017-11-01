@@ -87,8 +87,6 @@ class MemoryMap {
         this._blocks = new Map();
 
         if (blocks && typeof blocks[Symbol.iterator] === 'function') {
-            this._blocks = new Map();
-
             for (const tuple of blocks) {
                 if (!(tuple instanceof Array) || tuple.length !== 2) {
                     throw new Error('First parameter to MemoryMap constructor must be an iterable of [addr, bytes] or undefined');
@@ -187,7 +185,7 @@ class MemoryMap {
             // we want to be aware of them.
             if (lastCharacterParsed !== matchResult.index) {
                 throw new Error(
-                    'Malformed hex file: Could nor parse between characters ' +
+                    'Malformed hex file: Could not parse between characters ' +
                     lastCharacterParsed +
                     ' and ' +
                     matchResult.index +
@@ -275,6 +273,8 @@ class MemoryMap {
                         // (see http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka9903.html )
                         // but will be ignored nonetheless.
                         break;
+                    default:
+                        throw new Error('Invalid record type 0x' + hexpad(recordType) + ' at record ' + recordCount + ' (should be between 0x00 and 0x05)');
                 }
             }
         }
@@ -381,19 +381,19 @@ class MemoryMap {
      * @param {Map.MemoryMap} memoryMaps The input memory block sets
      *
      * @example
-     * import { overlapBlockSets, hexToArrays } from 'nrf-intel-hex';
+     * import MemoryMap from 'nrf-intel-hex';
      *
      * let memMap1 = MemoryMap.fromHex( hexdata1 );
      * let memMap2 = MemoryMap.fromHex( hexdata2 );
      * let memMap3 = MemoryMap.fromHex( hexdata3 );
      *
-     * let blockSets = new Map([
+     * let maps = new Map([
      *  ['file A', blocks1],
      *  ['file B', blocks2],
      *  ['file C', blocks3]
      * ]);
      *
-     * let overlappings = overlapBlockSets(blockSets);
+     * let overlappings = MemoryMap.overlapMemoryMaps(maps);
      *
      * for (let [address, tuples] of overlappings) {
      *     // if 'tuples' has length > 1, there is an overlap starting at 'address'
@@ -487,8 +487,6 @@ class MemoryMap {
      *  <li>The size of each <tt>Uint8Array</tt> is exactly <tt>pageSize</tt></li>
      *  <li>Bytes from the input map to bytes in the output</li>
      *  <li>Bytes not in the input are replaced by a padding value</li>
-     *  <li>If the optional start and end parameters are used, only bytes
-     *  between those addresses will be in the output.</li>
      * </ul>
      *<br/>
      * The scenario is wanting to prepare pages of bytes for a write operation, where the write
@@ -509,7 +507,6 @@ class MemoryMap {
         if (pageSize <= 0) {
             throw new Error('Page size must be greater than zero');
         }
-    //     let pageAddr = -Infinity;
         let outPages = new MemoryMap();
         let page;
 
@@ -585,30 +582,19 @@ class MemoryMap {
      * The writer has an opinionated behaviour. Check the project's
      * {@link https://github.com/NordicSemiconductor/nrf-intel-hex#Features|README file} for details.
      *
-     * @param {Map.Uint8Array} blocks The data blocks, indexed by their starting memory address.
      * @param {Number} [lineSize=16] Maximum number of bytes to be encoded in each data record.
+     * Must have a value between 1 and 255, as per the specification.
      *
      * @return {String} String of text with the .hex representation of the input binary data
      *
      * @example
-     * import { arraysToHex } from 'nrf-intel-hex';
+     * import MemoryMap from 'nrf-intel-hex';
      *
-     * let blocks = new Map();
+     * let memMap = new MemoryMap();
      * let bytes = new Uint8Array(....);
-     * blocks.set(0x0FF80000, bytes); // The block with 'bytes' will start at offset 0x0FF80000
+     * memMap.set(0x0FF80000, bytes); // The block with 'bytes' will start at offset 0x0FF80000
      *
-     * let string = arraysToHex(blocks);
-     *
-     * @example
-     * import { arraysToHex } from 'nrf-intel-hex';
-     *
-     * // Input can also be in an alternative syntax using a plain object instead of a Map
-     * let blocks = {
-     *      0: new Uint8Array(....),
-     *      0x01F0: new Uint8Array(....)
-     * };
-     *
-     * let string = arraysToHex(blocks);
+     * let string = memMap.asHexString();
      */
     asHexString(lineSize = 16) {
         let lowAddress  = 0;    // 16 least significant bits of the current addr
@@ -616,6 +602,8 @@ class MemoryMap {
         let records = [];
         if (lineSize <=0) {
             throw new Error('Size of record must be greater than zero');
+        } else if (lineSize > 255) {
+            throw new Error('Size of record must be less than 256');
         }
 
         // Placeholders
@@ -702,8 +690,7 @@ class MemoryMap {
                     recordSize = Math.min(
                         lineSize,                            // Normal case
                         blockEnd - highAddress - lowAddress, // End of block
-                        0x10000 - lowAddress,                // End of low addresses
-                        255                                  // Maximum record length as per spec
+                        0x10000 - lowAddress                 // End of low addresses
                     );
 
                     if (recordSize) {
