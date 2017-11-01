@@ -140,7 +140,7 @@ class MemoryMap {
      *<br/>
      * The parser has an opinionated behaviour, and will throw a descriptive error if it
      * encounters some malformed input. Check the project's
-     * {@link https://github.com/NordicSemiconductor/nrf-intel-hex#Features|README file} for details.
+     * {@link https://github.com/NordicPlayground/nrf-intel-hex#Features|README file} for details.
      *<br/>
      * If <tt>maxBlockSize</tt> is given, any contiguous data block larger than that will
      * be split in several blocks.
@@ -579,7 +579,7 @@ class MemoryMap {
      * Returns a <tt>String</tt> of text representing a .hex file.
      * <br/>
      * The writer has an opinionated behaviour. Check the project's
-     * {@link https://github.com/NordicSemiconductor/nrf-intel-hex#Features|README file} for details.
+     * {@link https://github.com/NordicPlayground/nrf-intel-hex#Features|README file} for details.
      *
      * @param {Number} [lineSize=16] Maximum number of bytes to be encoded in each data record.
      * Must have a value between 1 and 255, as per the specification.
