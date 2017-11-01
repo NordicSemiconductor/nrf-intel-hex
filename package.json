@@ -8,8 +8,10 @@
   "browser": "intel-hex.browser.js",
   "author": "Iván Sánchez Ortega <ivan@sanchezortega.es>",
   "scripts": {
-    "rollup": "rollup -c rollup.config.js",
+    "lint": "eslint intel-hex.js",
+    "lintfix": "eslint --fix intel-hex.js",
     "test": "rollup -c rollup.config.js; jasmine",
+    "rollup": "rollup -c rollup.config.js",
     "docs": "jsdoc intel-hex.js -t node_modules/minami/ -d doc/"
   },
   "devDependencies": {
@@ -30,6 +32,7 @@
   },
   "repository": "https://github.com/NordicSemiconductor/nrf-intel-hex.git",
   "dependencies": {
+    "eslint": "^4.10.0",
     "rollup-plugin-commonjs": "^8.2.5"
   }
 }

@@ -13,7 +13,9 @@ export default [
         },
         name: 'MemoryMap',
         plugins: [
-            buble({ transforms: { forOf: false } }),
+            buble({
+                transforms: { forOf: false }
+            }),
         ]
     },
 
@@ -24,7 +26,9 @@ export default [
 //             { file: pkg.module, format: 'es', sourcemap: true }
         ],
         plugins: [
-            buble({ transforms: { forOf: false } }),
+            buble({
+                transforms: { forOf: false }
+            }),
         ]
     }
 ];
