@@ -1,6 +1,6 @@
 {
   "name": "nrf-intel-hex",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "BSD",
   "description": "Parser/writer for the Intel HEX format",
   "module": "intel-hex.js",
@@ -15,6 +15,7 @@
     "docs": "jsdoc intel-hex.js -t node_modules/minami/ -d doc/"
   },
   "devDependencies": {
+    "eslint": "^4.10.0",
     "jasmine": "^2.8.0",
     "jsdoc": "^3.5.5",
     "minami": "^1.2.3",
@@ -31,8 +32,5 @@
     "node": ">=6.0.0"
   },
   "repository": "https://github.com/NordicSemiconductor/nrf-intel-hex.git",
-  "dependencies": {
-    "eslint": "^4.10.0",
-    "rollup-plugin-commonjs": "^8.2.5"
-  }
+  "dependencies": {}
 }
