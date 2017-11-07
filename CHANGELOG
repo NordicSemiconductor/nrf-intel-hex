@@ -1,4 +1,13 @@
 
+# v1.0.1 (2017-11-07)
+
+* Moved eslint to devDependencies
+
+# v1.0.0 (2017-11-01)
+
+* Refactor into `MemoryMap` class
+* Implemented `fromPaddedUint8Array()` functionality
+
 # v0.4.0 (2017-09-13)
 
 * Module now also exports `getUint32()`
