@@ -26,10 +26,10 @@ let intelHexString =
     ":100000000102030405060708090A0B0C0D0E0F1068\n" +
     ":00000001FF";
 
-let byteArrays = hexToArrays(intelHexString);
+let memMap = hexToArrays(intelHexString);
 ```
 
-`byteArrays` is a [`Map`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map)
+`memMap` is a `MemoryMap`, a [`Map`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map)
 in which each key is a memory address offset, and each value is a
 [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)
 containing binary data.
@@ -44,11 +44,11 @@ start address of that block:
 ```
 import { arraysToHex } from 'nrf-intel-hex';
 
-let blocks = new Map();
+let memMap = new MemoryMap();
 let bytes = new Uint8Array(....);
-blocks.set(0x0FF80000, bytes); // The block with 'bytes' will start at offset 0x0FF80000
+memMap.set(0x0FF80000, bytes); // The block with 'bytes' will start at offset 0x0FF80000
 
-let string = arraysToHex(blocks);
+let string = memMap.asHexString();
 ```
 
 The return value will be a string of text containing all the records.
