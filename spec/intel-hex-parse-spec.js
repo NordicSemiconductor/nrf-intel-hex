@@ -1111,4 +1111,87 @@ describe("MemoryMap fromHex/asHex", function() {
             ]));
         });
     });
+
+
+    describe("slice", function() {
+        it('Empty identity', () => {
+            let memMap = new MemoryMap([]);
+
+            expect(memMap.slice(0,16)).toEqual(memMap);
+        });
+
+        it('contiguous 16-byte identity', () => {
+//             let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
+//             let bytes2 = (new Uint8Array(16)).map((i,j)=>j+16);
+//             let bytes3 = (new Uint8Array(16)).map((i,j)=>j+32);
+//             let bytes4 = (new Uint8Array(16)).map((i,j)=>j+48);
+//             let memMap = new MemoryMap([
+//                 [0x050010, bytes3],
+//                 [0x000000, bytes1],
+//                 [0x050C30, bytes4],
+//                 [0x000800, bytes2]
+//             ]);
+
+            let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+            ]);
+
+            expect(memMap.slice(0, 16)).toEqual(memMap);
+            expect(memMap.slice(0, 32)).toEqual(memMap);
+
+            let memMap2 = new MemoryMap([
+                [0x000010, bytes1],
+            ]);
+
+            expect(memMap2.slice(16, 16)).toEqual(memMap2);
+            expect(memMap2.slice(0, 48)).toEqual(memMap2);
+        });
+
+        it('non-contiguous 16-byte identity', () => {
+            let bytes1 = (new Uint8Array(4)).map((i,j)=>j);
+            let bytes2 = (new Uint8Array(8)).map((i,j)=>j+8);
+            let memMap = new MemoryMap([
+                [0x000010, bytes1],
+                [0x000018, bytes2],
+            ]);
+
+            expect(memMap.slice(16, 16)).toEqual(memMap);
+            expect(memMap.slice(16, 32)).toEqual(memMap);
+            expect(memMap.slice(0, 48)).toEqual(memMap);
+        });
+
+        it('Slices a larger stream of bytes', () => {
+            let bytes1 = (new Uint8Array(64)).map((i,j)=>j);
+            let bytes2 = (new Uint8Array(16)).map((i,j)=>j+8);
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+            ]);
+
+            expect(memMap.slice(8, 16)).toEqual(new MemoryMap([[0x08, bytes2]]));
+        });
+
+
+        it('Slices byte blocks at the beginning and end of the slice', () => {
+            let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
+            let bytes2 = (new Uint8Array(16)).map((i,j)=>j+16);
+            let bytes3 = (new Uint8Array(16)).map((i,j)=>j+32);
+            let memMap = new MemoryMap([
+                [0x000100, bytes1],
+                [0x000200, bytes2],
+                [0x000300, bytes3],
+            ]);
+
+            let memMap2 = new MemoryMap([
+                [0x000108, bytes1.subarray(8, 16)],
+                [0x000200, bytes2],
+                [0x000300, bytes3.subarray(0, 8)],
+            ]);
+
+            expect(memMap.slice(0x108, 0x200)).toEqual(memMap2);
+        });
+
+    });
+
+
 });

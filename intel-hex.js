@@ -731,7 +731,7 @@ class MemoryMap {
     clone() {
         const cloned = new MemoryMap();
 
-        for (var [addr, value] of this) {
+        for (let [addr, value] of this) {
             cloned.set(addr, new Uint8Array(value));
         }
 
@@ -817,6 +817,40 @@ class MemoryMap {
         return memMap;
     }
 
+
+    /**
+     * Returns a new instance of <tt>MemoryMap</tt>, containing only data between
+     * <tt>offset</tt> and <tt>offset</tt> + <tt>length</tt>.
+     *
+     * <br/>
+     * The returned <tt>MemoryMap</tt> might be empty.
+     * <br/>
+     * Internally, this uses <tt>subarray</tt>, so new memory is not allocated.
+     *
+     * @param {Number} offset The start offset
+     * @param {Number} length The lenght of memory map to slice out
+     * @return {MemoryMap}
+     */
+    slice(offset, length){
+        const sliced = new MemoryMap();
+
+        for (let [blockAddr, block] of this) {
+            const blockLength = block.length;
+
+            if ((blockAddr + length) >= offset && blockAddr < (offset + length)) {
+                const sliceStart = Math.max(offset, blockAddr);
+                const sliceEnd = Math.min(offset + length, blockAddr + blockLength);
+                const sliceLength = sliceEnd - sliceStart;
+                const relativeSliceStart = sliceStart - blockAddr;
+
+                if (sliceLength) {
+                    sliced.set(sliceStart, block.subarray(relativeSliceStart, relativeSliceStart + sliceLength));
+                }
+            }
+
+        }
+        return sliced;
+    }
 }
 
 
