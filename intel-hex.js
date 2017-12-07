@@ -482,7 +482,8 @@ class MemoryMap {
      * Returns a new instance of {@linkcode MemoryMap}, where:
      *
      * <ul>
-     *  <li>Each address is a multiple of <tt>pageSize</tt></li>
+     *  <li>Each key (the start address of each <tt>Uint8Array</tt>) is a multiple of
+     *    <tt>pageSize</tt></li>
      *  <li>The size of each <tt>Uint8Array</tt> is exactly <tt>pageSize</tt></li>
      *  <li>Bytes from the input map to bytes in the output</li>
      *  <li>Bytes not in the input are replaced by a padding value</li>
@@ -819,38 +820,45 @@ class MemoryMap {
 
 
     /**
-     * Returns a new instance of <tt>MemoryMap</tt>, containing only data between
-     * <tt>offset</tt> and <tt>offset</tt> + <tt>length</tt>.
+     * Returns a new instance of {@linkcode MemoryMap}, containing only data between
+     * the addresses <tt>address</tt> and <tt>address + length</tt>.
+     * Behaviour is similar to {@linkcode https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/slice|Array.prototype.slice},
+     * in that the return value is a portion of the current {@linkcode MemoryMap}.
      *
      * <br/>
-     * The returned <tt>MemoryMap</tt> might be empty.
+     * The returned {@linkcode MemoryMap} might be empty.
+     *
      * <br/>
      * Internally, this uses <tt>subarray</tt>, so new memory is not allocated.
      *
-     * @param {Number} offset The start offset
+     * @param {Number} address The start address of the slice
      * @param {Number} length The lenght of memory map to slice out
      * @return {MemoryMap}
      */
-    slice(offset, length){
+    slice(address, length = Infinity){
+        if (length < 0) {
+            throw new Error('Length of the slice cannot be negative');
+        }
+
         const sliced = new MemoryMap();
 
         for (let [blockAddr, block] of this) {
             const blockLength = block.length;
 
-            if ((blockAddr + length) >= offset && blockAddr < (offset + length)) {
-                const sliceStart = Math.max(offset, blockAddr);
-                const sliceEnd = Math.min(offset + length, blockAddr + blockLength);
+            if ((blockAddr + length) >= address && blockAddr < (address + length)) {
+                const sliceStart = Math.max(address, blockAddr);
+                const sliceEnd = Math.min(address + length, blockAddr + blockLength);
                 const sliceLength = sliceEnd - sliceStart;
                 const relativeSliceStart = sliceStart - blockAddr;
 
-                if (sliceLength) {
+                if (sliceLength > 0) {
                     sliced.set(sliceStart, block.subarray(relativeSliceStart, relativeSliceStart + sliceLength));
                 }
             }
-
         }
         return sliced;
     }
+
 }
 
 

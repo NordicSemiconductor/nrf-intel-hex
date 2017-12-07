@@ -1114,6 +1114,17 @@ describe("MemoryMap fromHex/asHex", function() {
 
 
     describe("slice", function() {
+        it('Length sanity checks', () => {
+            let memMap = new MemoryMap([]);
+            expect(()=>{
+                memMap.slice(0, -10);
+            }).toThrow(new Error('Length of the slice cannot be negative'));
+
+            expect(()=>{
+                memMap.slice(10, -1);
+            }).toThrow(new Error('Length of the slice cannot be negative'));
+        });
+
         it('Empty identity', () => {
             let memMap = new MemoryMap([]);
 
@@ -1121,17 +1132,6 @@ describe("MemoryMap fromHex/asHex", function() {
         });
 
         it('contiguous 16-byte identity', () => {
-//             let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
-//             let bytes2 = (new Uint8Array(16)).map((i,j)=>j+16);
-//             let bytes3 = (new Uint8Array(16)).map((i,j)=>j+32);
-//             let bytes4 = (new Uint8Array(16)).map((i,j)=>j+48);
-//             let memMap = new MemoryMap([
-//                 [0x050010, bytes3],
-//                 [0x000000, bytes1],
-//                 [0x050C30, bytes4],
-//                 [0x000800, bytes2]
-//             ]);
-
             let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
             let memMap = new MemoryMap([
                 [0x000000, bytes1],
@@ -1147,6 +1147,17 @@ describe("MemoryMap fromHex/asHex", function() {
             expect(memMap2.slice(16, 16)).toEqual(memMap2);
             expect(memMap2.slice(0, 48)).toEqual(memMap2);
         });
+
+
+        it('zero-length slice is empty', () => {
+            let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+            ]);
+
+            expect(memMap.slice(8, 0)).toEqual(new MemoryMap());
+        });
+
 
         it('non-contiguous 16-byte identity', () => {
             let bytes1 = (new Uint8Array(4)).map((i,j)=>j);
