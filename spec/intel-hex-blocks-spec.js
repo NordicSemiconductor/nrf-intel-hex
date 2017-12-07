@@ -629,4 +629,183 @@ describe("MemoryMap utilities", function() {
 
     });
 
+
+    describe("slice", function() {
+        it('Length sanity checks', () => {
+            let memMap = new MemoryMap([]);
+            expect(()=>{
+                memMap.slice(0, -10);
+            }).toThrow(new Error('Length of the slice cannot be negative'));
+
+            expect(()=>{
+                memMap.slice(10, -1);
+            }).toThrow(new Error('Length of the slice cannot be negative'));
+        });
+
+        it('Empty identity', () => {
+            let memMap = new MemoryMap([]);
+
+            expect(memMap.slice(0,16)).toEqual(memMap);
+        });
+
+        it('contiguous 16-byte identity', () => {
+            let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+            ]);
+
+            expect(memMap.slice(0, 16)).toEqual(memMap);
+            expect(memMap.slice(0, 32)).toEqual(memMap);
+
+            let memMap2 = new MemoryMap([
+                [0x000010, bytes1],
+            ]);
+
+            expect(memMap2.slice(16, 16)).toEqual(memMap2);
+            expect(memMap2.slice(0, 48)).toEqual(memMap2);
+        });
+
+
+        it('zero-length slice is empty', () => {
+            let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+            ]);
+
+            expect(memMap.slice(8, 0)).toEqual(new MemoryMap());
+        });
+
+
+        it('non-contiguous 16-byte identity', () => {
+            let bytes1 = (new Uint8Array(4)).map((i,j)=>j);
+            let bytes2 = (new Uint8Array(8)).map((i,j)=>j+8);
+            let memMap = new MemoryMap([
+                [0x000010, bytes1],
+                [0x000018, bytes2],
+            ]);
+
+            expect(memMap.slice(16, 16)).toEqual(memMap);
+            expect(memMap.slice(16, 32)).toEqual(memMap);
+            expect(memMap.slice(0, 48)).toEqual(memMap);
+        });
+
+        it('Slices a larger stream of bytes', () => {
+            let bytes1 = (new Uint8Array(64)).map((i,j)=>j);
+            let bytes2 = (new Uint8Array(16)).map((i,j)=>j+8);
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+            ]);
+
+            expect(memMap.slice(8, 16)).toEqual(new MemoryMap([[0x08, bytes2]]));
+        });
+
+
+        it('Slices byte blocks at the beginning and end of the slice', () => {
+            let bytes1 = (new Uint8Array(16)).map((i,j)=>j);
+            let bytes2 = (new Uint8Array(16)).map((i,j)=>j+16);
+            let bytes3 = (new Uint8Array(16)).map((i,j)=>j+32);
+            let memMap = new MemoryMap([
+                [0x000100, bytes1],
+                [0x000200, bytes2],
+                [0x000300, bytes3],
+            ]);
+
+            let memMap2 = new MemoryMap([
+                [0x000108, bytes1.subarray(8, 16)],
+                [0x000200, bytes2],
+                [0x000300, bytes3.subarray(0, 8)],
+            ]);
+
+            expect(memMap.slice(0x108, 0x200)).toEqual(memMap2);
+        });
+
+        it('Slices part of one block off a multi-block memMap', () => {
+            const bytes1 = new Uint8Array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+            const bytes5 = new Uint8Array([10,11,12,13]);
+
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+                [0x000100, bytes1],
+                [0x000200, bytes1],
+            ]);
+
+            const sliced = memMap.slice(0x209, 4);
+
+            expect(sliced).toEqual(new MemoryMap([[0x209, bytes5]]));
+        });
+
+    });
+
+
+    describe("contains", function() {
+        const bytes1 = new Uint8Array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+        const bytes2 = new Uint8Array([1,2,3,4,5,6,7,8]);
+        const bytes3 = new Uint8Array([9,10,11,12,13,14,15,16]);
+        const bytes4 = new Uint8Array([1,2,3,4]);
+        const bytes5 = new Uint8Array([10,11,12,13]);
+        it('Empty is contained', () => {
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+            ]);
+
+            expect(memMap.contains(new MemoryMap())).toEqual(true);
+        });
+
+        it('Identity is contained', () => {
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+            ]);
+
+            expect(memMap.contains(memMap)).toEqual(true);
+        });
+
+        it('Subset at the beginning is contained', () => {
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+            ]);
+            let subMemMap = new MemoryMap([
+                [0x000000, bytes2],
+            ]);
+
+            expect(memMap.contains(subMemMap)).toEqual(true);
+        });
+
+        it('Subset at the end is contained', () => {
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+            ]);
+            let subMemMap = new MemoryMap([
+                [0x000008, bytes3],
+            ]);
+
+            expect(memMap.contains(subMemMap)).toEqual(true);
+        });
+
+        it('Offset contents are not contained', () => {
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+            ]);
+            let subMemMap = new MemoryMap([
+                [0x000008, bytes1],
+            ]);
+
+            expect(memMap.contains(subMemMap)).toEqual(false);
+        });
+
+        it('Sparse maps are contained', () => {
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+                [0x000100, bytes1],
+                [0x000200, bytes1],
+            ]);
+            let subMemMap = new MemoryMap([
+                [0x000008, bytes3],
+                [0x000100, bytes4],
+                [0x000209, bytes5],
+            ]);
+
+            expect(memMap.contains(subMemMap)).toEqual(true);
+        });
+    });
+
 });
