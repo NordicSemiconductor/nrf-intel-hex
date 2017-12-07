@@ -845,7 +845,7 @@ class MemoryMap {
         for (let [blockAddr, block] of this) {
             const blockLength = block.length;
 
-            if ((blockAddr + length) >= address && blockAddr < (address + length)) {
+            if ((blockAddr + blockLength) >= address && blockAddr < (address + length)) {
                 const sliceStart = Math.max(address, blockAddr);
                 const sliceEnd = Math.min(address + length, blockAddr + blockLength);
                 const sliceLength = sliceEnd - sliceStart;
@@ -859,6 +859,43 @@ class MemoryMap {
         return sliced;
     }
 
+    /**
+     * Checks whether the current memory map contains the one given as a parameter.
+     *
+     * <br/>
+     * "Contains" means that all the offsets that have a byte value in the given
+     * memory map have a value in the current memory map, and that the byte values
+     * are the same.
+     *
+     * <br/>
+     * An empty memory map is always contained in any other memory map.
+     *
+     * <br/>
+     * Returns boolean <tt>true</tt> if the memory map is contained, <tt>false</tt>
+     * otherwise.
+     *
+     * @param {MemoryMap} memMap The memory map to check
+     * @return {Boolean}
+     */
+    contains(memMap) {
+        for (let [blockAddr, block] of memMap) {
+
+            const blockLength = block.length;
+
+            const slice = this.slice(blockAddr, blockLength).join().get(blockAddr);
+
+            if ((!slice) || slice.length !== blockLength ) {
+                return false;
+            }
+
+            for (const i in block) {
+                if (block[i] !== slice[i]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }
 
 
