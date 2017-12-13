@@ -623,7 +623,7 @@ class MemoryMap {
                 throw new Error('Block at offset ' + blockAddr + ' has a negative thus invalid address');
             }
             const blockSize = block.length;
-            if (!blockSize) { continue; }   // Skip zero-lenght blocks
+            if (!blockSize) { continue; }   // Skip zero-length blocks
 
 
             if (blockAddr > (highAddress + 0xFFFF)) {
@@ -832,7 +832,7 @@ class MemoryMap {
      * Internally, this uses <tt>subarray</tt>, so new memory is not allocated.
      *
      * @param {Number} address The start address of the slice
-     * @param {Number} length The lenght of memory map to slice out
+     * @param {Number} length The length of memory map to slice out
      * @return {MemoryMap}
      */
     slice(address, length = Infinity){
