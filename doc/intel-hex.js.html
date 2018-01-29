@@ -24,7 +24,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="MemoryMap.html">MemoryMap</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.flattenOverlaps">flattenOverlaps</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.fromHex">fromHex</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.fromPaddedUint8Array">fromPaddedUint8Array</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.overlapMemoryMaps">overlapMemoryMaps</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#asHexString">asHexString</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#clone">clone</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#getUint32">getUint32</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#join">join</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#paginate">paginate</a></span></li>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="MemoryMap.html">MemoryMap</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.flattenOverlaps">flattenOverlaps</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.fromHex">fromHex</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.fromPaddedUint8Array">fromPaddedUint8Array</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.overlapMemoryMaps">overlapMemoryMaps</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#asHexString">asHexString</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#clone">clone</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#contains">contains</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#getUint32">getUint32</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#join">join</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#paginate">paginate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#slice">slice</a></span></li>
 </nav>
 
 <div id="main">
@@ -69,8 +69,8 @@ function checksum(bytes) {
 // Takes two Uint8Arrays as input,
 // Returns an integer in the 0-255 range.
 function checksumTwo(array1, array2) {
-    let partial1 = array1.reduce((sum, v)=>sum + v, 0);
-    let partial2 = array2.reduce((sum, v)=>sum + v, 0);
+    const partial1 = array1.reduce((sum, v)=>sum + v, 0);
+    const partial2 = array2.reduce((sum, v)=>sum + v, 0);
     return -( partial1 + partial2 ) &amp; 0xFF;
 }
 
@@ -83,7 +83,7 @@ function hexpad(number) {
 
 // Polyfill as per https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isInteger
 Number.isInteger = Number.isInteger || function(value) {
-  return typeof value === 'number' &amp;&amp;
+    return typeof value === 'number' &amp;&amp;
     isFinite(value) &amp;&amp;
     Math.floor(value) === value;
 };
@@ -128,8 +128,6 @@ class MemoryMap {
         this._blocks = new Map();
 
         if (blocks &amp;&amp; typeof blocks[Symbol.iterator] === 'function') {
-            this._blocks = new Map();
-
             for (const tuple of blocks) {
                 if (!(tuple instanceof Array) || tuple.length !== 2) {
                     throw new Error('First parameter to MemoryMap constructor must be an iterable of [addr, bytes] or undefined');
@@ -207,7 +205,7 @@ class MemoryMap {
      * }
      */
     static fromHex(hexText, maxBlockSize = Infinity) {
-        let blocks = new MemoryMap();
+        const blocks = new MemoryMap();
 
         let lastCharacterParsed = 0;
         let matchResult;
@@ -228,7 +226,7 @@ class MemoryMap {
             // we want to be aware of them.
             if (lastCharacterParsed !== matchResult.index) {
                 throw new Error(
-                    'Malformed hex file: Could nor parse between characters ' +
+                    'Malformed hex file: Could not parse between characters ' +
                     lastCharacterParsed +
                     ' and ' +
                     matchResult.index +
@@ -239,7 +237,7 @@ class MemoryMap {
             lastCharacterParsed = hexLineRegexp.lastIndex;
 
             // Give pretty names to the match's capture groups
-            const [undefined, recordStr, recordChecksum] = matchResult;
+            const [, recordStr, recordChecksum] = matchResult;
 
             // String to Uint8Array - https://stackoverflow.com/questions/43131242/how-to-convert-a-hexademical-string-of-data-to-an-arraybuffer-in-javascript
             const recordBytes = new Uint8Array(recordStr.match(/[\da-f]{2}/gi).map((h)=>parseInt(h, 16)));
@@ -256,7 +254,7 @@ class MemoryMap {
 
             const offset = (recordBytes[1] &lt;&lt; 8) + recordBytes[2];
             const recordType = recordBytes[3];
-            let data = recordBytes.subarray(4);
+            const data = recordBytes.subarray(4);
 
             if (recordType === 0) {
                 // Data record, contains data
@@ -283,39 +281,40 @@ class MemoryMap {
                 }
 
                 switch (recordType) {
-                    case 1: // EOF
-                        if (lastCharacterParsed !== hexText.length) {
-                            // This record should be at the very end of the string
-                            throw new Error('There is data after an EOF record at record ' + recordCount);
-                        }
+                case 1: // EOF
+                    if (lastCharacterParsed !== hexText.length) {
+                        // This record should be at the very end of the string
+                        throw new Error('There is data after an EOF record at record ' + recordCount);
+                    }
 
-                        return blocks.join(maxBlockSize);
-                        break;
+                    return blocks.join(maxBlockSize);
 
-                    case 2: // Extended Segment Address Record
-                        // Sets the 16 most significant bits of the 20-bit Segment Base
-                        // Address for the subsequent data.
-                        ulba = ((data[0] &lt;&lt; 8) + data[1]) &lt;&lt; 4;
-                        break;
+                case 2: // Extended Segment Address Record
+                    // Sets the 16 most significant bits of the 20-bit Segment Base
+                    // Address for the subsequent data.
+                    ulba = ((data[0] &lt;&lt; 8) + data[1]) &lt;&lt; 4;
+                    break;
 
-                    case 3: // Start Segment Address Record
-                        // Do nothing. Record type 3 only applies to 16-bit Intel CPUs,
-                        // where it should reset the program counter (CS+IP CPU registers)
-                        break;
+                case 3: // Start Segment Address Record
+                    // Do nothing. Record type 3 only applies to 16-bit Intel CPUs,
+                    // where it should reset the program counter (CS+IP CPU registers)
+                    break;
 
-                    case 4: // Extended Linear Address Record
-                        // Sets the 16 most significant (upper) bits of the 32-bit Linear Address
-                        // for the subsequent data
-                        ulba = ((data[0] &lt;&lt; 8) + data[1]) &lt;&lt; 16;
-                        break;
+                case 4: // Extended Linear Address Record
+                    // Sets the 16 most significant (upper) bits of the 32-bit Linear Address
+                    // for the subsequent data
+                    ulba = ((data[0] &lt;&lt; 8) + data[1]) &lt;&lt; 16;
+                    break;
 
-                    case 5: // Start Linear Address Record
-                        // Do nothing. Record type 5 only applies to 32-bit Intel CPUs,
-                        // where it should reset the program counter (EIP CPU register)
-                        // It might have meaning for other CPU architectures
-                        // (see http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka9903.html )
-                        // but will be ignored nonetheless.
-                        break;
+                case 5: // Start Linear Address Record
+                    // Do nothing. Record type 5 only applies to 32-bit Intel CPUs,
+                    // where it should reset the program counter (EIP CPU register)
+                    // It might have meaning for other CPU architectures
+                    // (see http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka9903.html )
+                    // but will be ignored nonetheless.
+                    break;
+                default:
+                    throw new Error('Invalid record type 0x' + hexpad(recordType) + ' at record ' + recordCount + ' (should be between 0x00 and 0x05)');
                 }
             }
         }
@@ -352,8 +351,8 @@ class MemoryMap {
     join(maxBlockSize = Infinity) {
 
         // First pass, create a Map of address→length of contiguous blocks
-        let sortedKeys = Array.from(this.keys()).sort((a,b)=>a-b);
-        let blockSizes = new Map();
+        const sortedKeys = Array.from(this.keys()).sort((a,b)=>a-b);
+        const blockSizes = new Map();
         let lastBlockAddr = -1;
         let lastBlockEndAddr = -1;
 
@@ -377,7 +376,7 @@ class MemoryMap {
         }
 
         // Second pass: allocate memory for the contiguous blocks and copy data around.
-        let mergedBlocks = new MemoryMap();
+        const mergedBlocks = new MemoryMap();
         let mergingBlock;
         let mergingBlockAddr = -1;
         for (let i=0,l=sortedKeys.length; i&lt;l; i++) {
@@ -388,7 +387,7 @@ class MemoryMap {
                 mergingBlockAddr = blockAddr;
             }
             mergingBlock.set(this.get(blockAddr), blockAddr - mergingBlockAddr);
-        };
+        }
 
         return mergedBlocks;
     }
@@ -422,19 +421,19 @@ class MemoryMap {
      * @param {Map.MemoryMap} memoryMaps The input memory block sets
      *
      * @example
-     * import { overlapBlockSets, hexToArrays } from 'nrf-intel-hex';
+     * import MemoryMap from 'nrf-intel-hex';
      *
      * let memMap1 = MemoryMap.fromHex( hexdata1 );
      * let memMap2 = MemoryMap.fromHex( hexdata2 );
      * let memMap3 = MemoryMap.fromHex( hexdata3 );
      *
-     * let blockSets = new Map([
+     * let maps = new Map([
      *  ['file A', blocks1],
      *  ['file B', blocks2],
      *  ['file C', blocks3]
      * ]);
      *
-     * let overlappings = overlapBlockSets(blockSets);
+     * let overlappings = MemoryMap.overlapMemoryMaps(maps);
      *
      * for (let [address, tuples] of overlappings) {
      *     // if 'tuples' has length > 1, there is an overlap starting at 'address'
@@ -448,27 +447,27 @@ class MemoryMap {
      */
     static overlapMemoryMaps(memoryMaps) {
         // First pass: create a list of addresses where any block starts or ends.
-        let cuts = new Set();
-        for (let [setId, blocks] of memoryMaps) {
-            for (let [address, block] of blocks) {
+        const cuts = new Set();
+        for (const [, blocks] of memoryMaps) {
+            for (const [address, block] of blocks) {
                 cuts.add(address);
                 cuts.add(address + block.length);
             }
         }
 
-        let orderedCuts = Array.from(cuts.values()).sort((a,b)=>a-b);
-        let overlaps = new Map();
+        const orderedCuts = Array.from(cuts.values()).sort((a,b)=>a-b);
+        const overlaps = new Map();
 
         // Second pass: iterate through the cuts, get slices of every intersecting blockset
         for (let i=0, l=orderedCuts.length-1; i&lt;l; i++) {
-            let cut = orderedCuts[i];
-            let nextCut = orderedCuts[i+1];
-            let tuples = [];
+            const cut = orderedCuts[i];
+            const nextCut = orderedCuts[i+1];
+            const tuples = [];
 
-            for (let [setId, blocks] of memoryMaps) {
+            for (const [setId, blocks] of memoryMaps) {
                 // Find the block with the highest address that is equal or lower to
                 // the current cut (if any)
-                let blockAddr = Array.from(blocks.keys()).reduce((acc, val)=>{
+                const blockAddr = Array.from(blocks.keys()).reduce((acc, val)=>{
                     if (val > cut) {
                         return acc;
                     }
@@ -476,9 +475,9 @@ class MemoryMap {
                 }, -1);
 
                 if (blockAddr !== -1) {
-                    let block = blocks.get(blockAddr);
-                    let subBlockStart = cut - blockAddr;
-                    let subBlockEnd = nextCut - blockAddr;
+                    const block = blocks.get(blockAddr);
+                    const subBlockStart = cut - blockAddr;
+                    const subBlockEnd = nextCut - blockAddr;
 
                     if (subBlockStart &lt; block.length) {
                         tuples.push([ setId, block.subarray(subBlockStart, subBlockEnd) ]);
@@ -524,12 +523,11 @@ class MemoryMap {
      * Returns a new instance of {@linkcode MemoryMap}, where:
      *
      * &lt;ul>
-     *  &lt;li>Each address is a multiple of &lt;tt>pageSize&lt;/tt>&lt;/li>
+     *  &lt;li>Each key (the start address of each &lt;tt>Uint8Array&lt;/tt>) is a multiple of
+     *    &lt;tt>pageSize&lt;/tt>&lt;/li>
      *  &lt;li>The size of each &lt;tt>Uint8Array&lt;/tt> is exactly &lt;tt>pageSize&lt;/tt>&lt;/li>
      *  &lt;li>Bytes from the input map to bytes in the output&lt;/li>
      *  &lt;li>Bytes not in the input are replaced by a padding value&lt;/li>
-     *  &lt;li>If the optional start and end parameters are used, only bytes
-     *  between those addresses will be in the output.&lt;/li>
      * &lt;/ul>
      *&lt;br/>
      * The scenario is wanting to prepare pages of bytes for a write operation, where the write
@@ -550,11 +548,10 @@ class MemoryMap {
         if (pageSize &lt;= 0) {
             throw new Error('Page size must be greater than zero');
         }
-    //     let pageAddr = -Infinity;
-        let outPages = new MemoryMap();
+        const outPages = new MemoryMap();
         let page;
 
-        let sortedKeys = Array.from(this.keys()).sort((a,b)=>a-b);
+        const sortedKeys = Array.from(this.keys()).sort((a,b)=>a-b);
 
         for (let i=0,l=sortedKeys.length; i&lt;l; i++) {
             const blockAddr = sortedKeys[i];
@@ -604,7 +601,7 @@ class MemoryMap {
      * @return {Number|undefined} An unsigned 32-bit integer number
      */
     getUint32(offset, littleEndian) {
-        let keys = Array.from(this.keys());
+        const keys = Array.from(this.keys());
 
         for (let i=0,l=keys.length; i&lt;l; i++) {
             const blockAddr = keys[i];
@@ -626,47 +623,38 @@ class MemoryMap {
      * The writer has an opinionated behaviour. Check the project's
      * {@link https://github.com/NordicSemiconductor/nrf-intel-hex#Features|README file} for details.
      *
-     * @param {Map.Uint8Array} blocks The data blocks, indexed by their starting memory address.
      * @param {Number} [lineSize=16] Maximum number of bytes to be encoded in each data record.
+     * Must have a value between 1 and 255, as per the specification.
      *
      * @return {String} String of text with the .hex representation of the input binary data
      *
      * @example
-     * import { arraysToHex } from 'nrf-intel-hex';
+     * import MemoryMap from 'nrf-intel-hex';
      *
-     * let blocks = new Map();
+     * let memMap = new MemoryMap();
      * let bytes = new Uint8Array(....);
-     * blocks.set(0x0FF80000, bytes); // The block with 'bytes' will start at offset 0x0FF80000
+     * memMap.set(0x0FF80000, bytes); // The block with 'bytes' will start at offset 0x0FF80000
      *
-     * let string = arraysToHex(blocks);
-     *
-     * @example
-     * import { arraysToHex } from 'nrf-intel-hex';
-     *
-     * // Input can also be in an alternative syntax using a plain object instead of a Map
-     * let blocks = {
-     *      0: new Uint8Array(....),
-     *      0x01F0: new Uint8Array(....)
-     * };
-     *
-     * let string = arraysToHex(blocks);
+     * let string = memMap.asHexString();
      */
     asHexString(lineSize = 16) {
         let lowAddress  = 0;    // 16 least significant bits of the current addr
         let highAddress = -1 &lt;&lt; 16; // 16 most significant bits of the current addr
-        let records = [];
+        const records = [];
         if (lineSize &lt;=0) {
             throw new Error('Size of record must be greater than zero');
+        } else if (lineSize > 255) {
+            throw new Error('Size of record must be less than 256');
         }
 
         // Placeholders
-        let offsetRecord = new Uint8Array(6);
-        let recordHeader = new Uint8Array(4);
+        const offsetRecord = new Uint8Array(6);
+        const recordHeader = new Uint8Array(4);
 
-        let sortedKeys = Array.from(this.keys()).sort((a,b)=>a-b);
+        const sortedKeys = Array.from(this.keys()).sort((a,b)=>a-b);
         for (let i=0,l=sortedKeys.length; i&lt;l; i++) {
-            let blockAddr = sortedKeys[i];
-            let block = this.get(blockAddr);
+            const blockAddr = sortedKeys[i];
+            const block = this.get(blockAddr);
 
             // Sanity checks
             if (!(block instanceof Uint8Array)) {
@@ -675,8 +663,8 @@ class MemoryMap {
             if (blockAddr &lt; 0) {
                 throw new Error('Block at offset ' + blockAddr + ' has a negative thus invalid address');
             }
-            let blockSize = block.length;
-            if (!blockSize) { continue; }   // Skip zero-lenght blocks
+            const blockSize = block.length;
+            if (!blockSize) { continue; }   // Skip zero-length blocks
 
 
             if (blockAddr > (highAddress + 0xFFFF)) {
@@ -710,7 +698,7 @@ class MemoryMap {
 
             lowAddress = blockAddr % 0x10000;
             let blockOffset = 0;
-            let blockEnd = blockAddr + blockSize;
+            const blockEnd = blockAddr + blockSize;
             if (blockEnd > 0xFFFFFFFF) {
                 throw new Error('Data cannot be over 0xFFFFFFFF');
             }
@@ -743,8 +731,7 @@ class MemoryMap {
                     recordSize = Math.min(
                         lineSize,                            // Normal case
                         blockEnd - highAddress - lowAddress, // End of block
-                        0x10000 - lowAddress,                // End of low addresses
-                        255                                  // Maximum record length as per spec
+                        0x10000 - lowAddress                 // End of low addresses
                     );
 
                     if (recordSize) {
@@ -754,7 +741,7 @@ class MemoryMap {
                         recordHeader[2] = lowAddress;    // Load offset, low byte
                         recordHeader[3] = 0;    // Record type
 
-                        let subBlock = block.subarray(blockOffset, blockOffset + recordSize);   // Data bytes for this record
+                        const subBlock = block.subarray(blockOffset, blockOffset + recordSize);   // Data bytes for this record
 
                         records.push(
                             ':' +
@@ -770,7 +757,7 @@ class MemoryMap {
             }
         }
 
-        records.push(":00000001FF");    // EOF record
+        records.push(':00000001FF');    // EOF record
 
         return records.join('\n');
     }
@@ -784,9 +771,9 @@ class MemoryMap {
      * @return {MemoryMap}
      */
     clone() {
-        let cloned = new MemoryMap();
+        const cloned = new MemoryMap();
 
-        for (var [addr, value] of this) {
+        for (let [addr, value] of this) {
             cloned.set(addr, new Uint8Array(value));
         }
 
@@ -832,7 +819,7 @@ class MemoryMap {
         // Anyway, we could expect a lot of cases where there is a majority of pad bytes,
         // and the algorithm should check most of them anyway, so the perf gain is questionable.
 
-        let memMap = new MemoryMap();
+        const memMap = new MemoryMap();
         let consecutivePads = 0;
         let lastNonPad = -1;
         let firstNonPad = 0;
@@ -872,6 +859,84 @@ class MemoryMap {
         return memMap;
     }
 
+
+    /**
+     * Returns a new instance of {@linkcode MemoryMap}, containing only data between
+     * the addresses &lt;tt>address&lt;/tt> and &lt;tt>address + length&lt;/tt>.
+     * Behaviour is similar to {@linkcode https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/slice|Array.prototype.slice},
+     * in that the return value is a portion of the current {@linkcode MemoryMap}.
+     *
+     * &lt;br/>
+     * The returned {@linkcode MemoryMap} might be empty.
+     *
+     * &lt;br/>
+     * Internally, this uses &lt;tt>subarray&lt;/tt>, so new memory is not allocated.
+     *
+     * @param {Number} address The start address of the slice
+     * @param {Number} length The length of memory map to slice out
+     * @return {MemoryMap}
+     */
+    slice(address, length = Infinity){
+        if (length &lt; 0) {
+            throw new Error('Length of the slice cannot be negative');
+        }
+
+        const sliced = new MemoryMap();
+
+        for (let [blockAddr, block] of this) {
+            const blockLength = block.length;
+
+            if ((blockAddr + blockLength) >= address &amp;&amp; blockAddr &lt; (address + length)) {
+                const sliceStart = Math.max(address, blockAddr);
+                const sliceEnd = Math.min(address + length, blockAddr + blockLength);
+                const sliceLength = sliceEnd - sliceStart;
+                const relativeSliceStart = sliceStart - blockAddr;
+
+                if (sliceLength > 0) {
+                    sliced.set(sliceStart, block.subarray(relativeSliceStart, relativeSliceStart + sliceLength));
+                }
+            }
+        }
+        return sliced;
+    }
+
+    /**
+     * Checks whether the current memory map contains the one given as a parameter.
+     *
+     * &lt;br/>
+     * "Contains" means that all the offsets that have a byte value in the given
+     * memory map have a value in the current memory map, and that the byte values
+     * are the same.
+     *
+     * &lt;br/>
+     * An empty memory map is always contained in any other memory map.
+     *
+     * &lt;br/>
+     * Returns boolean &lt;tt>true&lt;/tt> if the memory map is contained, &lt;tt>false&lt;/tt>
+     * otherwise.
+     *
+     * @param {MemoryMap} memMap The memory map to check
+     * @return {Boolean}
+     */
+    contains(memMap) {
+        for (let [blockAddr, block] of memMap) {
+
+            const blockLength = block.length;
+
+            const slice = this.slice(blockAddr, blockLength).join().get(blockAddr);
+
+            if ((!slice) || slice.length !== blockLength ) {
+                return false;
+            }
+
+            for (const i in block) {
+                if (block[i] !== slice[i]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }
 
 
@@ -889,7 +954,7 @@ export default MemoryMap;
 <br class="clear">
 
 <footer>
-    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Oct 31 2017 10:06:40 GMT+0100 (STD) using the Minami theme.
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Dec 13 2017 15:00:54 GMT+0100 (CET) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>

@@ -1,5 +1,10 @@
 
-# v1.0.1 (2017-11-07)
+# v1.1.0 (2017-11-07)
+
+* Added `slice()` method
+* Added `contains()` method
+
+# v1.0.1 (2017-11-06)
 
 * Moved eslint to devDependencies
 
