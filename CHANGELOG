@@ -1,4 +1,9 @@
 
+# v1.1.0 (2018-02-02)
+
+* Added `slicePad()` method
+
+
 # v1.1.0 (2017-11-07)
 
 * Added `slice()` method

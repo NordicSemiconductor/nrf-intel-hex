@@ -549,7 +549,7 @@ class MemoryMap {
      * and returns the four bytes held at that offset, as a 32-bit unsigned integer.
      *
      *<br/>
-     * Behaviour is similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint32|<tt>DataView.prototype.getUint32</tt>},
+     * Behaviour is similar to {@linkcode https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint32|DataView.prototype.getUint32},
      * except that this operates over a {@linkcode MemoryMap} instead of
      * over an <tt>ArrayBuffer</tt>, and that this may return <tt>undefined</tt> if
      * the address is not <em>entirely</em> contained within one of the <tt>Uint8Array</tt>s.
@@ -857,6 +857,46 @@ class MemoryMap {
             }
         }
         return sliced;
+    }
+
+    /**
+     * Returns a new instance of {@linkcode https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint32|Uint8Array}, containing only data between
+     * the addresses <tt>address</tt> and <tt>address + length</tt>. Any byte without a value
+     * in the input {@linkcode MemoryMap} will have a value of <tt>padByte</tt>.
+     *
+     * <br/>
+     * The returned {@linkcode MemoryMap} might be empty.
+     *
+     * <br/>
+     * This method allocates new memory.
+     *
+     * @param {Number} address The start address of the slice
+     * @param {Number} length The lenght of memory map to slice out
+     * @param {Number} [padByte=0xFF] The value of the byte assumed to be used as padding
+     * @return {MemoryMap}
+     */
+    slicePad(address, length, padByte=0xFF){
+        if (length < 0) {
+            throw new Error('Length of the slice cannot be negative');
+        }
+        
+        const out = (new Uint8Array(length)).fill(padByte);
+
+        for (let [blockAddr, block] of this) {
+            const blockLength = block.length;
+
+            if ((blockAddr + blockLength) >= address && blockAddr < (address + length)) {
+                const sliceStart = Math.max(address, blockAddr);
+                const sliceEnd = Math.min(address + length, blockAddr + blockLength);
+                const sliceLength = sliceEnd - sliceStart;
+                const relativeSliceStart = sliceStart - blockAddr;
+
+                if (sliceLength > 0) {
+                    out.set(block.subarray(relativeSliceStart, relativeSliceStart + sliceLength), sliceStart - address);
+                }
+            }
+        }
+        return out;
     }
 
     /**

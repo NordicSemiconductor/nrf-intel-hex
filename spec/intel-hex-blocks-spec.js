@@ -808,4 +808,133 @@ describe("MemoryMap utilities", function() {
         });
     });
 
+    describe("slicePad", function() {
+        const bytes1 = new Uint8Array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+        const bytes2 = new Uint8Array([1,2,3,4]);
+        const bytes3 = new Uint8Array([5,6,7,8]);
+        
+        
+        it('of an empty map is all padding bytes', () => {
+            let memMap = new MemoryMap([]);
+
+            expect(memMap.slicePad(0, 8)).toEqual(Uint8Array.from(
+                [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
+            ));
+            expect(memMap.slicePad(0, 16)).toEqual(Uint8Array.from(
+                [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
+            ));
+            expect(memMap.slicePad(0, 8, 0xA5)).toEqual(Uint8Array.from(
+                [0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5]
+            ));
+        });
+
+        it('out of a memMap\'s data is all padding', () => {
+            let memMap = new MemoryMap([
+                [0x001000, bytes1],
+            ]);
+
+            expect(memMap.slicePad(0, 16)).toEqual(Uint8Array.from(
+                [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
+            ));
+            expect(memMap.slicePad(8, 16, 0xA5)).toEqual(Uint8Array.from(
+                [0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,
+                 0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5]
+            ));
+            expect(memMap.slicePad(0x28000, 16)).toEqual(Uint8Array.from(
+                [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
+            ));
+            expect(memMap.slicePad(0x28000, 16, 0xA5)).toEqual(Uint8Array.from(
+                [0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,
+                 0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5]
+            ));
+        });
+        
+        it('of a subset of contiguous data', () => {
+            let memMap = new MemoryMap([
+                [0x001000, bytes1],
+            ]);
+
+            expect(memMap.slicePad(0x1004, 8)).toEqual(Uint8Array.from(
+                [5,6,7,8,9,10,11,12]
+            ));
+        });
+
+        it('at the end of a MemMap\'s data has padding later', () => {
+            let memMap = new MemoryMap([
+                [0x000000, bytes1],
+            ]);
+
+            expect(memMap.slicePad(8, 4)).toEqual(Uint8Array.from(
+                [9,10,11,12]
+            ));
+            expect(memMap.slicePad(8, 8)).toEqual(Uint8Array.from(
+                [9,10,11,12,13,14,15,16]
+            ));
+            expect(memMap.slicePad(8, 16)).toEqual(Uint8Array.from(
+                [9,10,11,12,13,14,15,16,
+                 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
+            ));
+            expect(memMap.slicePad(8, 16, 0xA5)).toEqual(Uint8Array.from(
+                [9,10,11,12,13,14,15,16,
+                 0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5]
+            ));
+            expect(memMap.slicePad(8, 24)).toEqual(Uint8Array.from(
+                [9,10,11,12,13,14,15,16,
+                 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
+            ));
+        });
+
+        it('at the beginning of a MemMap\'s data has padding before', () => {
+            let memMap = new MemoryMap([
+                [0x001000, bytes1],
+            ]);
+
+            expect(memMap.slicePad(0xFFC, 8)).toEqual(Uint8Array.from(
+                [0xFF, 0xFF, 0xFF, 0xFF, 1,2,3,4]
+            ));
+            expect(memMap.slicePad(0xFF8, 16)).toEqual(Uint8Array.from(
+                [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                 1,2,3,4,5,6,7,8]
+            ));
+            expect(memMap.slicePad(0xFF0, 24)).toEqual(Uint8Array.from(
+                [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+                 1,2,3,4,5,6,7,8]
+            ));
+        });
+
+        it('of several blocks', () => {
+            let memMap = new MemoryMap([
+                [0x001000, bytes2],
+                [0x001006, bytes3],
+            ]);
+            
+            expect(memMap.slicePad(0x1000 - 8, 16)).toEqual(Uint8Array.from(
+                [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,   1,   2,   3,   4,0xFF,0xFF,   5,   6]
+            ));
+            expect(memMap.slicePad(0x1000 - 4, 16)).toEqual(Uint8Array.from(
+                [0xFF,0xFF,0xFF,0xFF,   1,   2,   3,   4,0xFF,0xFF,   5,   6,   7,   8,0xFF,0xFF]
+            ));
+            expect(memMap.slicePad(0x1000, 16)).toEqual(Uint8Array.from(
+                [   1,   2,   3,   4,0xFF,0xFF,   5,   6,   7,   8,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
+            ));
+            expect(memMap.slicePad(0x1002, 16)).toEqual(Uint8Array.from(
+                [   3,   4,0xFF,0xFF,   5,   6,   7,   8,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
+            ));
+            expect(memMap.slicePad(0x1004, 8)).toEqual(Uint8Array.from(
+                [0xFF,0xFF,   5,   6,   7,   8,0xFF,0xFF]
+            ));
+            expect(memMap.slicePad(0x1002, 6)).toEqual(Uint8Array.from(
+                [   3,   4,0xFF,0xFF,   5,   6]
+            ));
+
+        });
+
+        
+    });
+
 });
