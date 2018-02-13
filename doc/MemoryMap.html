@@ -24,7 +24,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="MemoryMap.html">MemoryMap</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.flattenOverlaps">flattenOverlaps</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.fromHex">fromHex</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.fromPaddedUint8Array">fromPaddedUint8Array</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.overlapMemoryMaps">overlapMemoryMaps</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#asHexString">asHexString</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#clone">clone</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#contains">contains</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#getUint32">getUint32</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#join">join</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#paginate">paginate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#slice">slice</a></span></li>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="MemoryMap.html">MemoryMap</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.flattenOverlaps">flattenOverlaps</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.fromHex">fromHex</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.fromPaddedUint8Array">fromPaddedUint8Array</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.overlapMemoryMaps">overlapMemoryMaps</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#asHexString">asHexString</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#clone">clone</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#contains">contains</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#getUint32">getUint32</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#join">join</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#paginate">paginate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#slice">slice</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#slicePad">slicePad</a></span></li>
 </nav>
 
 <div id="main">
@@ -1504,7 +1504,7 @@ otherwise.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="intel-hex.js.html">intel-hex.js</a>, <a href="intel-hex.js.html#line880">line 880</a>
+        <a href="intel-hex.js.html">intel-hex.js</a>, <a href="intel-hex.js.html#line917">line 917</a>
     </li></ul></dd>
     
 
@@ -1628,7 +1628,7 @@ otherwise.
 and returns the four bytes held at that offset, as a 32-bit unsigned integer.
 
 <br/>
-Behaviour is similar to <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint32"><tt>DataView.prototype.getUint32</tt></a>,
+Behaviour is similar to <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint32">DataView.prototype.getUint32</a>,
 except that this operates over a <a href="MemoryMap.html"><code>MemoryMap</code></a> instead of
 over an <tt>ArrayBuffer</tt>, and that this may return <tt>undefined</tt> if
 the address is not <em>entirely</em> contained within one of the <tt>Uint8Array</tt>s.
@@ -2458,6 +2458,263 @@ Internally, this uses <tt>subarray</tt>, so new memory is not allocated.
 
 </div>
         
+            
+<div class="section-method">
+
+    
+
+    <h4 class="name" id="slicePad"><span class="type-signature"></span>slicePad<span class="signature">(address, length, padByte<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="MemoryMap.html">MemoryMap</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Returns a new instance of <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint32">Uint8Array</a>, containing only data between
+the addresses <tt>address</tt> and <tt>address + length</tt>. Any byte without a value
+in the input <a href="MemoryMap.html"><code>MemoryMap</code></a> will have a value of <tt>padByte</tt>.
+
+<br/>
+This method allocates new memory.
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="intel-hex.js.html">intel-hex.js</a>, <a href="intel-hex.js.html#line875">line 875</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>address</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Number</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+                The start address of the slice
+                
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>length</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Number</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+                The length of memory map to slice out
+                
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>padByte</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Number</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    0xFF
+                
+                </td>
+            
+
+            <td class="description last">
+                The value of the byte assumed to be used as padding
+                
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="section-returns">
+<h5>Returns:</h5>
+
+        
+
+<dl class="param-type">
+    <dt>
+        Type:
+    </dt>
+    <dd>
+        
+<span class="param-type"><code><a href="MemoryMap.html">MemoryMap</a></code></span>
+
+
+    </dd>
+</dl>
+
+
+    
+</div>
+
+
+
+</div>
+        
     
 
     
@@ -2475,7 +2732,7 @@ Internally, this uses <tt>subarray</tt>, so new memory is not allocated.
 <br class="clear">
 
 <footer>
-    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Dec 13 2017 15:00:54 GMT+0100 (CET) using the Minami theme.
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Feb 13 2018 11:22:30 GMT+0100 (CET) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>

@@ -865,13 +865,10 @@ class MemoryMap {
      * in the input {@linkcode MemoryMap} will have a value of <tt>padByte</tt>.
      *
      * <br/>
-     * The returned {@linkcode MemoryMap} might be empty.
-     *
-     * <br/>
      * This method allocates new memory.
      *
      * @param {Number} address The start address of the slice
-     * @param {Number} length The lenght of memory map to slice out
+     * @param {Number} length The length of memory map to slice out
      * @param {Number} [padByte=0xFF] The value of the byte assumed to be used as padding
      * @return {MemoryMap}
      */
