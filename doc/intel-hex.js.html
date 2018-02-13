@@ -24,7 +24,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="MemoryMap.html">MemoryMap</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.flattenOverlaps">flattenOverlaps</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.fromHex">fromHex</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.fromPaddedUint8Array">fromPaddedUint8Array</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.overlapMemoryMaps">overlapMemoryMaps</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#asHexString">asHexString</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#clone">clone</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#contains">contains</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#getUint32">getUint32</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#join">join</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#paginate">paginate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#slice">slice</a></span></li>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="MemoryMap.html">MemoryMap</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.flattenOverlaps">flattenOverlaps</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.fromHex">fromHex</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.fromPaddedUint8Array">fromPaddedUint8Array</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#.overlapMemoryMaps">overlapMemoryMaps</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#asHexString">asHexString</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#clone">clone</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#contains">contains</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#getUint32">getUint32</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#join">join</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#paginate">paginate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#slice">slice</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="MemoryMap.html#slicePad">slicePad</a></span></li>
 </nav>
 
 <div id="main">
@@ -590,7 +590,7 @@ class MemoryMap {
      * and returns the four bytes held at that offset, as a 32-bit unsigned integer.
      *
      *&lt;br/>
-     * Behaviour is similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint32|&lt;tt>DataView.prototype.getUint32&lt;/tt>},
+     * Behaviour is similar to {@linkcode https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint32|DataView.prototype.getUint32},
      * except that this operates over a {@linkcode MemoryMap} instead of
      * over an &lt;tt>ArrayBuffer&lt;/tt>, and that this may return &lt;tt>undefined&lt;/tt> if
      * the address is not &lt;em>entirely&lt;/em> contained within one of the &lt;tt>Uint8Array&lt;/tt>s.
@@ -901,6 +901,43 @@ class MemoryMap {
     }
 
     /**
+     * Returns a new instance of {@linkcode https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getUint32|Uint8Array}, containing only data between
+     * the addresses &lt;tt>address&lt;/tt> and &lt;tt>address + length&lt;/tt>. Any byte without a value
+     * in the input {@linkcode MemoryMap} will have a value of &lt;tt>padByte&lt;/tt>.
+     *
+     * &lt;br/>
+     * This method allocates new memory.
+     *
+     * @param {Number} address The start address of the slice
+     * @param {Number} length The lenght of memory map to slice out
+     * @param {Number} [padByte=0xFF] The value of the byte assumed to be used as padding
+     * @return {MemoryMap}
+     */
+    slicePad(address, length, padByte=0xFF){
+        if (length &lt; 0) {
+            throw new Error('Length of the slice cannot be negative');
+        }
+        
+        const out = (new Uint8Array(length)).fill(padByte);
+
+        for (let [blockAddr, block] of this) {
+            const blockLength = block.length;
+
+            if ((blockAddr + blockLength) >= address &amp;&amp; blockAddr &lt; (address + length)) {
+                const sliceStart = Math.max(address, blockAddr);
+                const sliceEnd = Math.min(address + length, blockAddr + blockLength);
+                const sliceLength = sliceEnd - sliceStart;
+                const relativeSliceStart = sliceStart - blockAddr;
+
+                if (sliceLength > 0) {
+                    out.set(block.subarray(relativeSliceStart, relativeSliceStart + sliceLength), sliceStart - address);
+                }
+            }
+        }
+        return out;
+    }
+
+    /**
      * Checks whether the current memory map contains the one given as a parameter.
      *
      * &lt;br/>
@@ -954,7 +991,7 @@ export default MemoryMap;
 <br class="clear">
 
 <footer>
-    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Dec 13 2017 15:00:54 GMT+0100 (CET) using the Minami theme.
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Feb 13 2018 11:11:51 GMT+0100 (CET) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>

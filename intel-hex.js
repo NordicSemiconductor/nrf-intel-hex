@@ -865,9 +865,6 @@ class MemoryMap {
      * in the input {@linkcode MemoryMap} will have a value of <tt>padByte</tt>.
      *
      * <br/>
-     * The returned {@linkcode MemoryMap} might be empty.
-     *
-     * <br/>
      * This method allocates new memory.
      *
      * @param {Number} address The start address of the slice
