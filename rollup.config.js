@@ -8,7 +8,7 @@ export default [
         input: pkg.module,
         output: {
             file: pkg.browser,
-            format: 'iife',
+            format: 'umd',
             sourcemap: true
         },
         name: 'MemoryMap',
