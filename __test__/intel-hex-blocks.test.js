@@ -21,13 +21,11 @@ if (!String.prototype.padStart) {
     };
 }
 
-
-// Overwrite the "MemoryMap" if running on Node.
+// Fetch the "MemoryMap" if running on Node.
 // When running on a browser, the "MemoryMap" global is already define thanks to the IIFE.
-if (typeof window === 'undefined') {
-    global.MemoryMap = require('../intel-hex.cjs');
+if (typeof MemoryMap === 'undefined') {
+    var MemoryMap = require('../intel-hex.cjs');
 }
-
 
 describe("MemoryMap utilities", function() {
 
@@ -812,8 +810,8 @@ describe("MemoryMap utilities", function() {
         const bytes1 = new Uint8Array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
         const bytes2 = new Uint8Array([1,2,3,4]);
         const bytes3 = new Uint8Array([5,6,7,8]);
-        
-        
+
+
         it('of an empty map is all padding bytes', () => {
             let memMap = new MemoryMap([]);
 
@@ -851,7 +849,7 @@ describe("MemoryMap utilities", function() {
                  0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5,0xA5]
             ));
         });
-        
+
         it('of a subset of contiguous data', () => {
             let memMap = new MemoryMap([
                 [0x001000, bytes1],
@@ -912,7 +910,7 @@ describe("MemoryMap utilities", function() {
                 [0x001000, bytes2],
                 [0x001006, bytes3],
             ]);
-            
+
             expect(memMap.slicePad(0x1000 - 8, 16)).toEqual(Uint8Array.from(
                 [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,   1,   2,   3,   4,0xFF,0xFF,   5,   6]
             ));
@@ -934,7 +932,7 @@ describe("MemoryMap utilities", function() {
 
         });
 
-        
+
     });
 
 });

@@ -10,13 +10,14 @@
   "scripts": {
     "lint": "eslint intel-hex.js",
     "lintfix": "eslint --fix intel-hex.js",
-    "test": "rollup -c rollup.config.js; jasmine",
+    "test": "rollup -c rollup.config.js && jest",
     "rollup": "rollup -c rollup.config.js",
     "docs": "jsdoc intel-hex.js -t node_modules/minami/ -d doc/"
   },
   "devDependencies": {
     "eslint": "^4.10.0",
-    "jasmine": "^2.8.0",
+    "jest": "^22.4.2",
+    "jest-bamboo-formatter": "^1.0.1",
     "jsdoc": "^3.5.5",
     "minami": "^1.2.3",
     "rollup": "^0.50.0",
@@ -32,5 +33,7 @@
     "node": ">=6.0.0"
   },
   "repository": "https://github.com/NordicSemiconductor/nrf-intel-hex.git",
-  "dependencies": {}
+  "jest": {
+    "testResultsProcessor": "jest-bamboo-formatter"
+  }
 }

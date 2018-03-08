@@ -21,13 +21,11 @@ if (!String.prototype.padStart) {
     };
 }
 
-
-// Overwrite the "MemoryMap" if running on Node.
+// Fetch the "MemoryMap" if running on Node.
 // When running on a browser, the "MemoryMap" global is already define thanks to the IIFE.
-if (typeof window === 'undefined') {
-    global.MemoryMap = require('../intel-hex.cjs');
+if (typeof MemoryMap === 'undefined') {
+    var MemoryMap = require('../intel-hex.cjs');
 }
-
 
 describe("MemoryMap fromHex/asHex", function() {
 
@@ -188,7 +186,7 @@ describe("MemoryMap fromHex/asHex", function() {
             it('Throws exception if record type is not between 0x00 and 0x05', () => {
                 expect(()=>{
                     let blocks = MemoryMap.fromHex(
-                        ':00000008F8\n' + 
+                        ':00000008F8\n' +
                         ':00000001FF');
                 }).toThrow(new Error('Invalid record type 0x08 at record 1 (should be between 0x00 and 0x05)'));
             });
