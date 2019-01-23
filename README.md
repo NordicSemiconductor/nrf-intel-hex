@@ -20,13 +20,13 @@ If you have some .hex files around, and can copy-paste them, try the
 Do a `npm install nrf-intel-hex` or `yarn add nrf-intel-hex`, then
 
 ```
-import { hexToArrays } from 'nrf-intel-hex';
+import MemoryMap from 'nrf-intel-hex';
 
 let intelHexString =
     ":100000000102030405060708090A0B0C0D0E0F1068\n" +
     ":00000001FF";
 
-let memMap = hexToArrays(intelHexString);
+let memMap = MemoryMap.fromHex(intelHexString);
 ```
 
 `memMap` is a `MemoryMap`, a [`Map`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map)
@@ -42,7 +42,7 @@ In order to write .hex records, provide a `Map` of `Uint8Array`s, where each key
 start address of that block:
 
 ```
-import { arraysToHex } from 'nrf-intel-hex';
+import MemoryMap from 'nrf-intel-hex';
 
 let memMap = new MemoryMap();
 let bytes = new Uint8Array(....);
