@@ -1,9 +1,11 @@
 
 # nrf-intel-hex
 
+[![Build Status](https://dev.azure.com/NordicSemiconductor/Wayland/_apis/build/status/nrf-intel-hex?branchName=master)](https://dev.azure.com/NordicSemiconductor/Wayland/_build/latest?definitionId=12&branchName=master)
+[![License](https://img.shields.io/badge/license-Modified%20BSD%20License-blue.svg)](LICENSE)
+
 Yet another javascript parser/writer for "[Intel HEX](https://en.wikipedia.org/wiki/Intel_HEX)" files.
 
-[![Build Status](https://travis-ci.org/NordicSemiconductor/nrf-intel-hex.svg?branch=master)](https://travis-ci.org/NordicSemiconductor/nrf-intel-hex)
 
 This is part of [Nordic Semiconductor](http://www.nordicsemi.com/)'s javascript tools to
 interface with nRF SoCs and development kits. Although the HEX format is a *de facto*
