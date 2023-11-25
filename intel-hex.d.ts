@@ -283,9 +283,9 @@ declare class MemoryMap extends Map<number, Uint8Array> {
    * @param {Number} address The start address of the slice
    * @param {Number} length The length of memory map to slice out
    * @param {Number} [padByte=0xFF] The value of the byte assumed to be used as padding
-   * @return {MemoryMap}
+   * @return {Uint8Array}
    */
-  slicePad(address: number, length: number, padByte?: number): MemoryMap;
+  slicePad(address: number, length: number, padByte?: number): Uint8Array;
 
   /**
    * Checks whether the current memory map contains the one given as a parameter.
