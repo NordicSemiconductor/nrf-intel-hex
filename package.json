@@ -5,6 +5,7 @@
   "description": "Parser/writer for the Intel HEX format",
   "module": "intel-hex.js",
   "main": "intel-hex.cjs.js",
+  "types": "intel-hex.d.ts",
   "browser": "intel-hex.browser.js",
   "author": "Iván Sánchez Ortega <ivan@sanchezortega.es>",
   "scripts": {
