@@ -1,17 +1,22 @@
+export type MemoryBlocks =
+  | Iterable<[number, Uint8Array]>
+  | {[addr: number]: Uint8Array}
+  | undefined
+  | null;
+
+export type Overlap<T> = [T, Uint8Array][];
+export type Overlaps<T> = Map<number, Overlap<T>>;
+export type MemoryMapTuple<T> = [T, MemoryMap];
+export type MemoryMaps<T> = MemoryMapTuple<T>[];
+
 declare class MemoryMap extends Map<number, Uint8Array> {
   /**
-   * @param {Iterable} blocks The initial value for the memory blocks inside this
+   * @param {MemoryBlocks} blocks The initial value for the memory blocks inside this
    * <tt>MemoryMap</tt>. All keys must be numeric, and all values must be instances of
    * <tt>Uint8Array</tt>. Optionally it can also be a plain <tt>Object</tt> with
    * only numeric keys.
    */
-  constructor(
-    blocks?:
-      | Iterable<[number, Uint8Array]>
-      | { [addr: number]: Uint8Array }
-      | undefined
-      | null
-  );
+  constructor(blocks?: MemoryBlocks);
 
   /**
    * Parses a string containing data formatted in "Intel HEX" format, and
@@ -124,9 +129,7 @@ declare class MemoryMap extends Map<number, Uint8Array> {
    * }
    * @return {Map.Array<mixed,Uint8Array>} The map of possibly overlapping memory blocks
    */
-  static overlapMemoryMaps<T = unknown>(
-    memoryMaps: Map<T, MemoryMap>
-  ): Map<T, Uint8Array>;
+  static overlapMemoryMaps<T = unknown>(memoryMaps: MemoryMaps<T>): Overlaps<T>;
 
   /**
    * Given the output of the {@linkcode MemoryMap.overlapMemoryMaps|overlapMemoryMaps}
@@ -144,7 +147,7 @@ declare class MemoryMap extends Map<number, Uint8Array> {
    * @param {Map.Array<mixed,Uint8Array>} overlaps The (possibly overlapping) input memory blocks
    * @return {MemoryMap} The flattened memory blocks
    */
-  static flattenOverlaps(overlaps: Map<unknown, Uint8Array>): MemoryMap;
+  static flattenOverlaps<T = unknown>(overlaps: Overlaps<T>): MemoryMap;
 
   /**
    * Returns a new instance of {@linkcode MemoryMap}, where:
@@ -190,7 +193,7 @@ declare class MemoryMap extends Map<number, Uint8Array> {
    */
   getUint32(
     offset: number,
-    littleEndian?: boolean | undefined
+    littleEndian?: boolean
   ): number | undefined;
 
   /**
